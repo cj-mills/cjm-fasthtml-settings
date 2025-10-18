@@ -8,3 +8,249 @@
 ``` bash
 pip install cjm_fasthtml_settings
 ```
+
+## Project Structure
+
+    nbs/
+    └── core/ (4)
+        ├── config.ipynb    # Configuration constants, directory management, and base application schema
+        ├── html_ids.ipynb  # Centralized HTML ID constants for settings components
+        ├── schemas.ipynb   # Schema registry and management for settings
+        └── utils.ipynb     # Configuration loading, saving, and conversion utilities
+
+Total: 4 notebooks across 2 directories
+
+## Module Dependencies
+
+``` mermaid
+graph LR
+    core_config[core.config<br/>Config]
+    core_html_ids[core.html_ids<br/>HTML IDs]
+    core_schemas[core.schemas<br/>Schemas]
+    core_utils[core.utils<br/>Utils]
+
+    core_schemas --> core_config
+    core_utils --> core_config
+```
+
+*2 cross-module dependencies detected*
+
+## CLI Reference
+
+No CLI commands found in this project.
+
+## Module Overview
+
+Detailed documentation for each module in the project:
+
+### Config (`config.ipynb`)
+
+> Configuration constants, directory management, and base application
+> schema
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.core.config import (
+    DEFAULT_CONFIG_DIR,
+    get_app_config_schema
+)
+```
+
+#### Functions
+
+``` python
+def get_app_config_schema(
+    app_title: str = "FastHTML Application",  # Default application title
+    config_dir: str = "configs",  # Default configuration directory
+    server_port: int = 5000,  # Default server port
+    themes_enum: Optional[List[str]] = None,  # Optional list of theme values
+    themes_enum_names: Optional[List[str]] = None,  # Optional list of theme display names
+    default_theme: Optional[str] = None,  # Default theme value
+    include_theme: bool = True,  # Whether to include theme selection
+    **extra_properties  # Additional custom properties to add to the schema
+) -> Dict[str, Any]:  # JSON Schema for application configuration
+    """
+    Generate a customizable application configuration schema.
+    
+    This function creates a JSON Schema for application settings that can be customized
+    with your own defaults and additional properties.
+    
+    Returns:
+        A JSON Schema dictionary with application configuration structure
+    """
+```
+
+#### Variables
+
+``` python
+DEFAULT_CONFIG_DIR
+```
+
+### HTML IDs (`html_ids.ipynb`)
+
+> Centralized HTML ID constants for settings components
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.core.html_ids import (
+    HtmlIds
+)
+```
+
+#### Classes
+
+``` python
+class HtmlIds:
+    "HTML ID constants used in settings components."
+    
+    def menu_item(name: str) -> str:
+            """Generate a menu item ID for a given settings name."""
+            return f"menu-item-{name}"
+    
+        @staticmethod
+        def as_selector(id_str: str) -> str
+        "Generate a menu item ID for a given settings name."
+    
+    def as_selector(id_str: str) -> str
+        "Convert an ID to a CSS selector format (with #)."
+```
+
+### Schemas (`schemas.ipynb`)
+
+> Schema registry and management for settings
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.core.schemas import (
+    SettingsRegistry
+)
+```
+
+#### Classes
+
+``` python
+class SettingsRegistry:
+    def __init__(self):
+        self._schemas: Dict[str, Dict[str, Any]] = {}
+    """
+    Registry for managing settings schemas.
+    
+    Provides a centralized place to register and access settings schemas.
+    """
+    
+    def __init__(self):
+            self._schemas: Dict[str, Dict[str, Any]] = {}
+    
+    def register(
+            self,
+            schema: Dict[str, Any],  # JSON Schema to register
+            name: Optional[str] = None  # Optional name override (uses schema['name'] if not provided)
+        )
+        "Register a settings schema.
+
+The schema must have a 'name' field, or you must provide a name parameter."
+    
+    def get(
+            self,
+            name: str  # Name of the schema to retrieve
+        ) -> Optional[Dict[str, Any]]:  # The schema dictionary, or None if not found
+        "Get a registered schema by name."
+    
+    def list_schemas(self) -> list:  # List of registered schema names
+            """List all registered schema names."""
+            return list(self._schemas.keys())
+        
+        def get_all(self) -> Dict[str, Dict[str, Any]]:  # Dictionary of all schemas
+        "List all registered schema names."
+    
+    def get_all(self) -> Dict[str, Dict[str, Any]]:  # Dictionary of all schemas
+        "Get all registered schemas."
+```
+
+### Utils (`utils.ipynb`)
+
+> Configuration loading, saving, and conversion utilities
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.core.utils import (
+    load_config,
+    save_config,
+    get_default_values_from_schema,
+    get_config_with_defaults,
+    convert_form_data_to_config
+)
+```
+
+#### Functions
+
+``` python
+def load_config(
+    schema_name: str,  # Name of the schema/configuration to load
+    config_dir: Optional[Path] = None  # Directory where config files are stored
+) -> Dict[str, Any]:  # Loaded configuration dictionary (empty dict if file doesn't exist)
+    """
+    Load saved configuration for a schema.
+    
+    Loads a JSON configuration file from the config directory.
+    If the file doesn't exist, returns an empty dictionary.
+    """
+```
+
+``` python
+def save_config(
+    schema_name: str,  # Name of the schema/configuration to save
+    config: Dict[str, Any],  # Configuration dictionary to save
+    config_dir: Optional[Path] = None  # Directory where config files are stored
+) -> bool:  # True if save succeeded, False otherwise
+    """
+    Save configuration for a schema.
+    
+    Saves a configuration dictionary as a JSON file in the config directory.
+    Creates the config directory if it doesn't exist.
+    """
+```
+
+``` python
+def get_default_values_from_schema(
+    schema: Dict[str, Any]  # JSON Schema dictionary
+) -> Dict[str, Any]:  # Dictionary of default values extracted from schema
+    """
+    Extract default values from a JSON schema.
+    
+    Iterates through the schema's properties and extracts any 'default' values.
+    """
+```
+
+``` python
+def get_config_with_defaults(
+    schema_name: str,  # Name of the schema
+    schema: Dict[str, Any],  # JSON Schema dictionary
+    config_dir: Optional[Path] = None  # Directory where config files are stored
+) -> Dict[str, Any]:  # Merged configuration with defaults and saved values
+    """
+    Get configuration with defaults merged with saved values.
+    
+    Loads saved configuration and merges it with schema defaults.
+    Saved values take precedence over defaults.
+    """
+```
+
+``` python
+def convert_form_data_to_config(
+    form_data: dict,  # Raw form data from request
+    schema: Dict[str, Any]  # JSON Schema for type conversion
+) -> dict:  # Converted configuration dictionary
+    """
+    Convert form data to configuration dict based on schema.
+    
+    Handles type conversions for:
+    - Boolean fields (checkboxes)
+    - Integer and number fields
+    - Array fields (comma-separated or Python list format)
+    """
+```
