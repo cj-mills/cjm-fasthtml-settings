@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "cjm-fasthtml-settings"
+  site-url: "https://cj-mills.github.io/cjm-fasthtml-settings"
+  description: "A drop-in schema-based configuration system for FastHTML applications with automatic UI generation, sidebar navigation, and persistent storage."
+  repo-branch: main
+  repo-url: "https://github.com/cj-mills/cjm-fasthtml-settings"
