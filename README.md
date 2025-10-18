@@ -12,28 +12,55 @@ pip install cjm_fasthtml_settings
 ## Project Structure
 
     nbs/
-    └── core/ (4)
-        ├── config.ipynb    # Configuration constants, directory management, and base application schema
-        ├── html_ids.ipynb  # Centralized HTML ID constants for settings components
-        ├── schemas.ipynb   # Schema registry and management for settings
-        └── utils.ipynb     # Configuration loading, saving, and conversion utilities
+    ├── components/ (4)
+    │   ├── alerts.ipynb     # Alert components for displaying success, error, and warning messages
+    │   ├── dashboard.ipynb  # Settings dashboard layout components
+    │   ├── forms.ipynb      # Form generation components for settings interfaces
+    │   └── sidebar.ipynb    # Navigation menu components for settings sidebar
+    ├── core/ (4)
+    │   ├── config.ipynb    # Configuration constants, directory management, and base application schema
+    │   ├── html_ids.ipynb  # Centralized HTML ID constants for settings components
+    │   ├── schemas.ipynb   # Schema registry and management for settings
+    │   └── utils.ipynb     # Configuration loading, saving, and conversion utilities
+    └── routes.ipynb  # Route helpers and utilities for settings endpoints
 
-Total: 4 notebooks across 2 directories
+Total: 9 notebooks across 2 directories
 
 ## Module Dependencies
 
 ``` mermaid
 graph LR
+    components_alerts[components.alerts<br/>Alerts]
+    components_dashboard[components.dashboard<br/>Dashboard]
+    components_forms[components.forms<br/>Forms]
+    components_sidebar[components.sidebar<br/>Sidebar]
     core_config[core.config<br/>Config]
     core_html_ids[core.html_ids<br/>HTML IDs]
     core_schemas[core.schemas<br/>Schemas]
     core_utils[core.utils<br/>Utils]
+    routes[routes<br/>Routes]
 
+    components_alerts --> core_html_ids
+    components_dashboard --> core_utils
+    components_dashboard --> components_sidebar
+    components_dashboard --> components_forms
+    components_dashboard --> core_html_ids
+    components_dashboard --> core_config
+    components_forms --> core_utils
+    components_forms --> core_html_ids
+    components_forms --> core_config
+    components_sidebar --> core_schemas
+    components_sidebar --> core_html_ids
+    components_sidebar --> core_config
     core_schemas --> core_config
     core_utils --> core_config
+    routes --> components_alerts
+    routes --> components_sidebar
+    routes --> core_html_ids
+    routes --> components_forms
 ```
 
-*2 cross-module dependencies detected*
+*18 cross-module dependencies detected*
 
 ## CLI Reference
 
@@ -42,6 +69,53 @@ No CLI commands found in this project.
 ## Module Overview
 
 Detailed documentation for each module in the project:
+
+### Alerts (`alerts.ipynb`)
+
+> Alert components for displaying success, error, and warning messages
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.components.alerts import (
+    create_success_alert,
+    create_error_alert,
+    create_warning_alert
+)
+```
+
+#### Functions
+
+``` python
+def _create_auto_dismiss_script(
+    timeout_ms: int = 3000  # Time in milliseconds before auto-dismiss
+) -> Script:  # Script element for auto-dismissing alerts
+    "Create a script that auto-dismisses the alert after a timeout."
+```
+
+``` python
+def create_success_alert(
+    message: str,  # The success message to display
+    timeout_ms: int = 3000  # Time in milliseconds before auto-dismiss
+) -> Div:  # Div element containing the success alert
+    "Create a success alert that auto-dismisses."
+```
+
+``` python
+def create_error_alert(
+    message: str,  # The error message to display
+    details: Optional[str] = None  # Optional additional details text
+) -> Div:  # Div element containing the error alert
+    "Create an error alert with optional details."
+```
+
+``` python
+def create_warning_alert(
+    message: str,  # The warning message to display
+    details: Optional[str] = None  # Optional additional details text
+) -> Div:  # Div element containing the warning alert
+    "Create a warning alert with optional details."
+```
 
 ### Config (`config.ipynb`)
 
@@ -87,6 +161,126 @@ def get_app_config_schema(
 DEFAULT_CONFIG_DIR
 ```
 
+### Dashboard (`dashboard.ipynb`)
+
+> Settings dashboard layout components
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.components.dashboard import (
+    create_form_skeleton,
+    render_schema_settings_content,
+    settings_content
+)
+```
+
+#### Functions
+
+``` python
+def create_form_skeleton(
+    schema_id: str,  # The schema ID for the settings
+    hx_get_url: str  # URL to fetch the actual form content
+) -> Div:  # Div element with loading trigger
+    """
+    Create a loading skeleton for the settings form that loads asynchronously.
+    
+    This provides a placeholder that triggers an HTMX request to load the actual form,
+    improving perceived performance for complex forms.
+    """
+```
+
+``` python
+def render_schema_settings_content(
+    schema: Dict,  # JSON schema for the settings
+    config_dir: Optional[Path] = None,  # Config directory path
+    save_route_fn = None,  # Function to generate save route URL
+    reset_route_fn = None  # Function to generate reset route URL
+) -> FT:  # Settings form container
+    """
+    Render settings content for a schema-based configuration.
+    
+    Args:
+        schema: The JSON schema to render
+        config_dir: Directory where configs are stored
+        save_route_fn: Function that takes schema name and returns save URL
+        reset_route_fn: Function that takes schema name and returns reset URL
+    """
+```
+
+``` python
+def settings_content(
+    request,  # FastHTML request object
+    schema: Dict,  # Schema to display
+    schemas: Dict,  # All registered schemas for sidebar
+    config_dir: Optional[Path] = None,  # Config directory
+    index_route_fn = None,  # Function to generate index route URLs
+    load_form_route_fn = None,  # Function to generate load form route URL
+    menu_section_title: str = "Settings"  # Sidebar section title
+) -> Div:  # Settings content layout
+    """
+    Return settings content with sidebar and form.
+    
+    Handles both full page loads and HTMX partial updates.
+    
+    Args:
+        request: The request object (to check for HTMX)
+        schema: The schema to display
+        schemas: All available schemas for the sidebar
+        config_dir: Config directory path
+        index_route_fn: Function to generate route URLs for sidebar
+        load_form_route_fn: Function to generate async form load URL
+        menu_section_title: Title for the sidebar menu section
+    """
+```
+
+### Forms (`forms.ipynb`)
+
+> Form generation components for settings interfaces
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.components.forms import (
+    create_settings_form,
+    create_settings_form_container
+)
+```
+
+#### Functions
+
+``` python
+def create_settings_form(
+    schema: Dict[str, Any],  # JSON schema for the form
+    values: Dict[str, Any],  # Current values for the form fields
+    post_url: str,  # URL for form submission
+    reset_url: str  # URL for resetting form to defaults
+) -> Form:  # Form element with settings and action buttons
+    """
+    Create a settings form with action buttons.
+    
+    Generates a form using cjm-fasthtml-jsonschema based on the provided schema,
+    with Save and Reset buttons.
+    """
+```
+
+``` python
+def create_settings_form_container(
+    schema: Dict[str, Any],  # JSON schema for the form
+    values: Dict[str, Any],  # Current values for the form fields
+    post_url: str,  # URL for form submission
+    reset_url: str,  # URL for resetting form to defaults
+    alert_message: Optional[Any] = None,  # Optional alert element to display
+    use_alert_container: bool = False  # If True, add empty alert-container div
+) -> Div:  # Div containing the alert (if any) and the settings form
+    """
+    Create a container with optional alert and settings form.
+    
+    This is useful for wrapping a settings form with an alert area that can
+    display success/error messages.
+    """
+```
+
 ### HTML IDs (`html_ids.ipynb`)
 
 > Centralized HTML ID constants for settings components
@@ -115,6 +309,98 @@ class HtmlIds:
     
     def as_selector(id_str: str) -> str
         "Convert an ID to a CSS selector format (with #)."
+```
+
+### Routes (`routes.ipynb`)
+
+> Route helpers and utilities for settings endpoints
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.routes import (
+    create_settings_response,
+    load_form_content,
+    handle_save,
+    handle_reset
+)
+```
+
+#### Functions
+
+``` python
+def create_settings_response(
+    schema: Dict[str, Any],  # Settings schema
+    values: Dict[str, Any],  # Configuration values
+    save_url: str,  # URL for save action
+    reset_url: str,  # URL for reset action
+    alert_msg,  # Alert message element
+    schemas: Dict[str, Dict[str, Any]],  # All schemas for sidebar
+    sidebar_id: str,  # ID for sidebar menu active state
+    config_dir: Optional[Path] = None,  # Config directory
+    index_route_fn = None,  # Function to generate sidebar route URLs
+    menu_section_title: str = "Settings"  # Sidebar section title
+) -> Div:  # Div containing form and sidebar with OOB swap
+    """
+    Create standardized settings form response with sidebar.
+    
+    This consolidates the common pattern of creating a settings form
+    with an OOB-swapped sidebar menu.
+    
+    Returns:
+        Div containing the form and updated sidebar
+    """
+```
+
+``` python
+def load_form_content(
+    schema: Dict[str, Any],  # Schema to load form for
+    config_dir: Optional[Path] = None,  # Config directory
+    save_route_fn = None,  # Function to generate save URL
+    reset_route_fn = None  # Function to generate reset URL
+) -> Div:  # Settings content div
+    """
+    Load the settings form content asynchronously.
+    
+    This is used as the endpoint for async form loading via HTMX.
+    """
+```
+
+``` python
+async def handle_save(
+    request,  # FastHTML request object
+    schema: Dict[str, Any],  # Schema being saved
+    schemas: Dict[str, Dict[str, Any]],  # All schemas for sidebar
+    schema_id: str,  # ID of the schema
+    config_dir: Optional[Path] = None,  # Config directory
+    save_route_fn = None,  # Function to generate save URL
+    reset_route_fn = None,  # Function to generate reset URL
+    index_route_fn = None,  # Function to generate sidebar URLs
+    menu_section_title: str = "Settings"  # Sidebar title
+)
+    """
+    Handle save request for settings.
+    
+    Converts form data, saves configuration, and returns updated UI.
+    """
+```
+
+``` python
+def handle_reset(
+    schema: Dict[str, Any],  # Schema being reset
+    schemas: Dict[str, Dict[str, Any]],  # All schemas for sidebar
+    schema_id: str,  # ID of the schema
+    config_dir: Optional[Path] = None,  # Config directory
+    save_route_fn = None,  # Function to generate save URL
+    reset_route_fn = None,  # Function to generate reset URL
+    index_route_fn = None,  # Function to generate sidebar URLs
+    menu_section_title: str = "Settings"  # Sidebar title
+)
+    """
+    Handle reset request for settings.
+    
+    Resets configuration to schema defaults and returns updated UI.
+    """
 ```
 
 ### Schemas (`schemas.ipynb`)
@@ -168,6 +454,61 @@ The schema must have a 'name' field, or you must provide a name parameter."
     
     def get_all(self) -> Dict[str, Dict[str, Any]]:  # Dictionary of all schemas
         "Get all registered schemas."
+```
+
+### Sidebar (`sidebar.ipynb`)
+
+> Navigation menu components for settings sidebar
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.components.sidebar import (
+    create_sidebar_menu,
+    create_oob_sidebar_menu
+)
+```
+
+#### Functions
+
+``` python
+def create_sidebar_menu(
+    schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas to display in sidebar
+    active_schema: Optional[str] = None,  # The currently active schema name
+    config_dir: Optional[Path] = None,  # Directory where config files are stored
+    include_wrapper: bool = True,  # Whether to include the outer wrapper div
+    index_route_fn = None,  # Function that takes schema name and returns index route URL
+    menu_section_title: str = "Settings"  # Title for the settings section
+) -> Div:  # Div or Ul element containing the sidebar menu
+    """
+    Create the sidebar navigation menu.
+    
+    Args:
+        schemas: Dictionary mapping schema names to schema objects
+        active_schema: Name of the currently active schema
+        config_dir: Path to config directory (uses DEFAULT_CONFIG_DIR if None)
+        include_wrapper: If False, returns just the Ul for OOB swaps
+        index_route_fn: Function to generate route URLs (e.g., lambda id: f"/settings?id={id}")
+        menu_section_title: Title to display for the menu section
+    
+    Returns:
+        Sidebar menu component
+    """
+```
+
+``` python
+def create_oob_sidebar_menu(
+    schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas
+    active_schema: str,  # Active schema name
+    config_dir: Optional[Path] = None,  # Config directory
+    index_route_fn = None,  # Route URL generator function
+    menu_section_title: str = "Settings"  # Menu section title
+)
+    """
+    Create sidebar menu with OOB swap attribute for HTMX.
+    
+    This is useful for updating the sidebar menu without a full page reload.
+    """
 ```
 
 ### Utils (`utils.ipynb`)
