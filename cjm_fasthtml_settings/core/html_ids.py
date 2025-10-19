@@ -6,16 +6,37 @@
 __all__ = ['HtmlIds']
 
 # %% ../../nbs/core/html_ids.ipynb 4
+from typing import Final
+
 class HtmlIds:
-    """HTML ID constants used in settings components."""
+    """HTML ID constants used in settings components.
+    
+    This class provides centralized HTML ID constants for the settings library.
+    All IDs are defined as class attributes for IDE autocomplete and type checking.
+    
+    For IDE Support:
+        IDEs like VS Code with Pylance will autocomplete these attributes and warn
+        if you try to access non-existent attributes. To add app-specific IDs,
+        extend this class:
+        
+        ```python
+        class AppHtmlIds(HtmlIds):
+            MAIN_CONTENT = "main-content"
+            CUSTOM_SECTION = "custom-section"
+        ```
+    
+    Note:
+        The typing.Final annotation indicates these are constants that shouldn't
+        be reassigned at runtime.
+    """
 
     # Settings containers
-    SETTINGS_CONTENT = "settings-content"
-    SETTINGS_SIDEBAR = "settings-sidebar"
-    ALERT_CONTAINER = "alert-container"
+    SETTINGS_CONTENT: Final[str] = "settings-content"
+    SETTINGS_SIDEBAR: Final[str] = "settings-sidebar"
+    ALERT_CONTAINER: Final[str] = "alert-container"
 
     # Navigation and menu
-    SIDEBAR_MENU = "sidebar-menu"
+    SIDEBAR_MENU: Final[str] = "sidebar-menu"
 
     @staticmethod
     def menu_item(name: str) -> str:

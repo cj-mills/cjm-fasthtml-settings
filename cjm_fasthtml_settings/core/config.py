@@ -54,7 +54,7 @@ def get_app_config_schema(
                 "title": "Configuration Directory",
                 "description": "Directory where configuration files are stored",
                 "default": config_dir,
-                "pattern": '^[^<>:"|?*]+$'
+                "pattern": '^[^<>:"\|?*]+$'
             },
             "auto_open_browser": {
                 "type": "boolean",

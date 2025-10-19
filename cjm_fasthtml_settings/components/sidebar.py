@@ -33,7 +33,6 @@ def create_sidebar_menu(
     active_schema: Optional[str] = None,  # The currently active schema name
     config_dir: Optional[Path] = None,  # Directory where config files are stored
     include_wrapper: bool = True,  # Whether to include the outer wrapper div
-    index_route_fn = None,  # Function that takes schema name and returns index route URL
     menu_section_title: str = "Settings"  # Title for the settings section
 ) -> Div:  # Div or Ul element containing the sidebar menu
     """Create the sidebar navigation menu.
@@ -43,12 +42,13 @@ def create_sidebar_menu(
         active_schema: Name of the currently active schema
         config_dir: Path to config directory (uses DEFAULT_CONFIG_DIR if None)
         include_wrapper: If False, returns just the Ul for OOB swaps
-        index_route_fn: Function to generate route URLs (e.g., lambda id: f"/settings?id={id}")
         menu_section_title: Title to display for the menu section
     
     Returns:
         Sidebar menu component
     """
+    from cjm_fasthtml_settings import routes as settings_rt
+    
     if config_dir is None:
         from cjm_fasthtml_settings.core.config import DEFAULT_CONFIG_DIR
         config_dir = DEFAULT_CONFIG_DIR
@@ -68,12 +68,6 @@ def create_sidebar_menu(
         is_active = active_schema == schema_name
         is_configured = (Path(config_dir) / f"{schema_name}.json").exists()
 
-        # Generate route URL
-        if index_route_fn:
-            route_url = index_route_fn(schema_name)
-        else:
-            route_url = f"/settings?id={schema_name}"
-
         menu_items.append(
             Li(
                 A(
@@ -88,8 +82,8 @@ def create_sidebar_menu(
                         ) if is_configured else None,
                         cls=combine_classes(flex_display, items.center, justify.between, w.full)
                     ),
-                    href=route_url,
-                    hx_get=route_url,
+                    href=settings_rt.index.to(id=schema_name),
+                    hx_get=settings_rt.index.to(id=schema_name),
                     hx_target=HtmlIds.as_selector(HtmlIds.SETTINGS_CONTENT),
                     hx_push_url="true",
                     cls=combine_classes(
@@ -132,7 +126,6 @@ def create_oob_sidebar_menu(
     schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas
     active_schema: str,  # Active schema name
     config_dir: Optional[Path] = None,  # Config directory
-    index_route_fn = None,  # Route URL generator function
     menu_section_title: str = "Settings"  # Menu section title
 ):
     """Create sidebar menu with OOB swap attribute for HTMX.
@@ -144,7 +137,6 @@ def create_oob_sidebar_menu(
         active_schema=active_schema,
         config_dir=config_dir,
         include_wrapper=False,
-        index_route_fn=index_route_fn,
         menu_section_title=menu_section_title
     )
     updated_menu.attrs['hx-swap-oob'] = 'true'

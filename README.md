@@ -22,7 +22,7 @@ pip install cjm_fasthtml_settings
     │   ├── html_ids.ipynb  # Centralized HTML ID constants for settings components
     │   ├── schemas.ipynb   # Schema registry and management for settings
     │   └── utils.ipynb     # Configuration loading, saving, and conversion utilities
-    └── routes.ipynb  # Route helpers and utilities for settings endpoints
+    └── routes.ipynb  # FastHTML route handlers for settings interface
 
 Total: 9 notebooks across 2 directories
 
@@ -41,26 +41,32 @@ graph LR
     routes[routes<br/>Routes]
 
     components_alerts --> core_html_ids
-    components_dashboard --> core_utils
+    components_dashboard --> core_html_ids
     components_dashboard --> components_sidebar
     components_dashboard --> components_forms
-    components_dashboard --> core_html_ids
     components_dashboard --> core_config
-    components_forms --> core_utils
+    components_dashboard --> core_utils
     components_forms --> core_html_ids
     components_forms --> core_config
-    components_sidebar --> core_schemas
+    components_forms --> core_utils
     components_sidebar --> core_html_ids
+    components_sidebar --> core_schemas
     components_sidebar --> core_config
+    core_schemas --> core_schemas
     core_schemas --> core_config
     core_utils --> core_config
-    routes --> components_alerts
-    routes --> components_sidebar
     routes --> core_html_ids
     routes --> components_forms
+    routes --> components_sidebar
+    routes --> routes
+    routes --> components_alerts
+    routes --> core_utils
+    routes --> core_config
+    routes --> components_dashboard
+    routes --> core_schemas
 ```
 
-*18 cross-module dependencies detected*
+*24 cross-module dependencies detected*
 
 ## CLI Reference
 
@@ -193,9 +199,7 @@ def create_form_skeleton(
 ``` python
 def render_schema_settings_content(
     schema: Dict,  # JSON schema for the settings
-    config_dir: Optional[Path] = None,  # Config directory path
-    save_route_fn = None,  # Function to generate save route URL
-    reset_route_fn = None  # Function to generate reset route URL
+    config_dir: Optional[Path] = None  # Config directory path
 ) -> FT:  # Settings form container
     """
     Render settings content for a schema-based configuration.
@@ -203,8 +207,6 @@ def render_schema_settings_content(
     Args:
         schema: The JSON schema to render
         config_dir: Directory where configs are stored
-        save_route_fn: Function that takes schema name and returns save URL
-        reset_route_fn: Function that takes schema name and returns reset URL
     """
 ```
 
@@ -214,8 +216,6 @@ def settings_content(
     schema: Dict,  # Schema to display
     schemas: Dict,  # All registered schemas for sidebar
     config_dir: Optional[Path] = None,  # Config directory
-    index_route_fn = None,  # Function to generate index route URLs
-    load_form_route_fn = None,  # Function to generate load form route URL
     menu_section_title: str = "Settings"  # Sidebar section title
 ) -> Div:  # Settings content layout
     """
@@ -228,8 +228,6 @@ def settings_content(
         schema: The schema to display
         schemas: All available schemas for the sidebar
         config_dir: Config directory path
-        index_route_fn: Function to generate route URLs for sidebar
-        load_form_route_fn: Function to generate async form load URL
         menu_section_title: Title for the sidebar menu section
     """
 ```
@@ -295,9 +293,29 @@ from cjm_fasthtml_settings.core.html_ids import (
 
 #### Classes
 
-``` python
+```` python
 class HtmlIds:
-    "HTML ID constants used in settings components."
+    """
+    HTML ID constants used in settings components.
+    
+    This class provides centralized HTML ID constants for the settings library.
+    All IDs are defined as class attributes for IDE autocomplete and type checking.
+    
+    For IDE Support:
+        IDEs like VS Code with Pylance will autocomplete these attributes and warn
+        if you try to access non-existent attributes. To add app-specific IDs,
+        extend this class:
+        
+        ```python
+        class AppHtmlIds(HtmlIds):
+            MAIN_CONTENT = "main-content"
+            CUSTOM_SECTION = "custom-section"
+        ```
+    
+    Note:
+        The typing.Final annotation indicates these are constants that shouldn't
+        be reassigned at runtime.
+    """
     
     def menu_item(name: str) -> str:
             """Generate a menu item ID for a given settings name."""
@@ -309,99 +327,166 @@ class HtmlIds:
     
     def as_selector(id_str: str) -> str
         "Convert an ID to a CSS selector format (with #)."
-```
+````
 
 ### Routes (`routes.ipynb`)
 
-> Route helpers and utilities for settings endpoints
+> FastHTML route handlers for settings interface
 
 #### Import
 
 ``` python
 from cjm_fasthtml_settings.routes import (
-    create_settings_response,
-    load_form_content,
-    handle_save,
-    handle_reset
+    config,
+    settings_ar,
+    RoutesConfig,
+    index,
+    load_form,
+    save,
+    reset
 )
 ```
 
 #### Functions
 
 ``` python
-def create_settings_response(
-    schema: Dict[str, Any],  # Settings schema
-    values: Dict[str, Any],  # Configuration values
-    save_url: str,  # URL for save action
-    reset_url: str,  # URL for reset action
-    alert_msg,  # Alert message element
-    schemas: Dict[str, Dict[str, Any]],  # All schemas for sidebar
-    sidebar_id: str,  # ID for sidebar menu active state
-    config_dir: Optional[Path] = None,  # Config directory
-    index_route_fn = None,  # Function to generate sidebar route URLs
-    menu_section_title: str = "Settings"  # Sidebar section title
-) -> Div:  # Div containing form and sidebar with OOB swap
-    """
-    Create standardized settings form response with sidebar.
-    
-    This consolidates the common pattern of creating a settings form
-    with an OOB-swapped sidebar menu.
+def _resolve_schema(id: str):
+    """Resolve schema from ID.
     
     Returns:
-        Div containing the form and updated sidebar
+        tuple: (schema, error_message) - schema is None if error occurred
     """
-```
-
-``` python
-def load_form_content(
-    schema: Dict[str, Any],  # Schema to load form for
-    config_dir: Optional[Path] = None,  # Config directory
-    save_route_fn = None,  # Function to generate save URL
-    reset_route_fn = None  # Function to generate reset URL
-) -> Div:  # Settings content div
+    schema = registry.get(id)
+    if schema
     """
-    Load the settings form content asynchronously.
+    Resolve schema from ID.
     
-    This is used as the endpoint for async form loading via HTMX.
+    Returns:
+        tuple: (schema, error_message) - schema is None if error occurred
     """
 ```
 
 ``` python
-async def handle_save(
-    request,  # FastHTML request object
-    schema: Dict[str, Any],  # Schema being saved
-    schemas: Dict[str, Dict[str, Any]],  # All schemas for sidebar
-    schema_id: str,  # ID of the schema
-    config_dir: Optional[Path] = None,  # Config directory
-    save_route_fn = None,  # Function to generate save URL
-    reset_route_fn = None,  # Function to generate reset URL
-    index_route_fn = None,  # Function to generate sidebar URLs
-    menu_section_title: str = "Settings"  # Sidebar title
+def _handle_htmx_request(request, content_fn: Callable, *args, **kwargs):
+    """Handle HTMX vs full page response pattern."""
+    content = content_fn(*args, **kwargs)
+    
+    # Check if this is an HTMX request
+    if request.headers.get('HX-Request')
+    "Handle HTMX vs full page response pattern."
+```
+
+``` python
+def _create_settings_response(
+    schema: Dict[str, Any],
+    values: Dict[str, Any],
+    save_url: str,
+    reset_url: str,
+    alert_msg,
+    sidebar_id: str
 )
-    """
-    Handle save request for settings.
+    "Create standardized settings form response with sidebar."
+```
+
+``` python
+@settings_ar
+def index(request, id: str = None):
+    """Main settings page.
     
-    Converts form data, saves configuration, and returns updated UI.
+    Args:
+        request: FastHTML request object
+        id: Schema ID to display (defaults to config.default_schema)
+    """
+    if id is None
+    """
+    Main settings page.
+    
+    Args:
+        request: FastHTML request object
+        id: Schema ID to display (defaults to config.default_schema)
     """
 ```
 
 ``` python
-def handle_reset(
-    schema: Dict[str, Any],  # Schema being reset
-    schemas: Dict[str, Dict[str, Any]],  # All schemas for sidebar
-    schema_id: str,  # ID of the schema
-    config_dir: Optional[Path] = None,  # Config directory
-    save_route_fn = None,  # Function to generate save URL
-    reset_route_fn = None,  # Function to generate reset URL
-    index_route_fn = None,  # Function to generate sidebar URLs
-    menu_section_title: str = "Settings"  # Sidebar title
-)
-    """
-    Handle reset request for settings.
+@settings_ar
+def load_form(id: str = None):
+    """Async endpoint that loads the settings form.
     
-    Resets configuration to schema defaults and returns updated UI.
+    Args:
+        id: Schema ID to load (defaults to config.default_schema)
+    """
+    from cjm_fasthtml_tailwind.utilities.flexbox_and_grid import flex
+    from cjm_fasthtml_tailwind.utilities.sizing import min_h
+    from cjm_fasthtml_tailwind.core.base import combine_classes
+    
+    if id is None
+    """
+    Async endpoint that loads the settings form.
+    
+    Args:
+        id: Schema ID to load (defaults to config.default_schema)
     """
 ```
+
+``` python
+@settings_ar
+async def save(request, id: str):
+    """Save configuration handler.
+    
+    Args:
+        request: FastHTML request object
+        id: Schema ID to save
+    """
+    schema, error_msg = _resolve_schema(id)
+    if error_msg
+    """
+    Save configuration handler.
+    
+    Args:
+        request: FastHTML request object
+        id: Schema ID to save
+    """
+```
+
+``` python
+@settings_ar
+def reset(id: str):
+    """Reset configuration to defaults handler.
+    
+    Args:
+        id: Schema ID to reset
+    """
+    schema, error_msg = _resolve_schema(id)
+    if error_msg
+    """
+    Reset configuration to defaults handler.
+    
+    Args:
+        id: Schema ID to reset
+    """
+```
+
+#### Classes
+
+```` python
+class RoutesConfig:
+    """
+    Configuration for settings routes behavior.
+    
+    Users can modify these before importing the router:
+    
+    Example:
+        ```python
+        from cjm_fasthtml_settings.routes import config
+        config.config_dir = Path("my_configs")
+        config.default_schema = "database"
+        config.wrap_with_layout = my_layout_function
+        
+        # Now import the router
+        from cjm_fasthtml_settings.routes import settings_ar
+        ```
+    """
+````
 
 ### Schemas (`schemas.ipynb`)
 
@@ -411,6 +496,7 @@ def handle_reset(
 
 ``` python
 from cjm_fasthtml_settings.core.schemas import (
+    registry,
     SettingsRegistry
 )
 ```
@@ -477,7 +563,6 @@ def create_sidebar_menu(
     active_schema: Optional[str] = None,  # The currently active schema name
     config_dir: Optional[Path] = None,  # Directory where config files are stored
     include_wrapper: bool = True,  # Whether to include the outer wrapper div
-    index_route_fn = None,  # Function that takes schema name and returns index route URL
     menu_section_title: str = "Settings"  # Title for the settings section
 ) -> Div:  # Div or Ul element containing the sidebar menu
     """
@@ -488,7 +573,6 @@ def create_sidebar_menu(
         active_schema: Name of the currently active schema
         config_dir: Path to config directory (uses DEFAULT_CONFIG_DIR if None)
         include_wrapper: If False, returns just the Ul for OOB swaps
-        index_route_fn: Function to generate route URLs (e.g., lambda id: f"/settings?id={id}")
         menu_section_title: Title to display for the menu section
     
     Returns:
@@ -501,7 +585,6 @@ def create_oob_sidebar_menu(
     schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas
     active_schema: str,  # Active schema name
     config_dir: Optional[Path] = None,  # Config directory
-    index_route_fn = None,  # Route URL generator function
     menu_section_title: str = "Settings"  # Menu section title
 )
     """

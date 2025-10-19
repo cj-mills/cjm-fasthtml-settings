@@ -55,18 +55,16 @@ def create_form_skeleton(
 # %% ../../nbs/components/dashboard.ipynb 9
 def render_schema_settings_content(
     schema: Dict,  # JSON schema for the settings
-    config_dir: Optional[Path] = None,  # Config directory path
-    save_route_fn = None,  # Function to generate save route URL
-    reset_route_fn = None  # Function to generate reset route URL
+    config_dir: Optional[Path] = None  # Config directory path
 ) -> FT:  # Settings form container
     """Render settings content for a schema-based configuration.
     
     Args:
         schema: The JSON schema to render
         config_dir: Directory where configs are stored
-        save_route_fn: Function that takes schema name and returns save URL
-        reset_route_fn: Function that takes schema name and returns reset URL
     """
+    from cjm_fasthtml_settings import routes as settings_rt
+    
     # Get the schema identifier
     schema_id = schema.get("name")
 
@@ -75,22 +73,11 @@ def render_schema_settings_content(
     default_values = get_default_values_from_schema(schema)
     values = {**default_values, **saved_config}
 
-    # Generate route URLs
-    if save_route_fn:
-        save_url = save_route_fn(schema_id)
-    else:
-        save_url = f"/settings/save/{schema_id}"
-        
-    if reset_route_fn:
-        reset_url = reset_route_fn(schema_id)
-    else:
-        reset_url = f"/settings/reset/{schema_id}"
-
     return create_settings_form_container(
         schema=schema,
         values=values,
-        post_url=save_url,
-        reset_url=reset_url,
+        post_url=settings_rt.save.to(id=schema_id),
+        reset_url=settings_rt.reset.to(id=schema_id),
         use_alert_container=True
     )
 
@@ -100,8 +87,6 @@ def settings_content(
     schema: Dict,  # Schema to display
     schemas: Dict,  # All registered schemas for sidebar
     config_dir: Optional[Path] = None,  # Config directory
-    index_route_fn = None,  # Function to generate index route URLs
-    load_form_route_fn = None,  # Function to generate load form route URL
     menu_section_title: str = "Settings"  # Sidebar section title
 ) -> Div:  # Settings content layout
     """Return settings content with sidebar and form.
@@ -113,10 +98,10 @@ def settings_content(
         schema: The schema to display
         schemas: All available schemas for the sidebar
         config_dir: Config directory path
-        index_route_fn: Function to generate route URLs for sidebar
-        load_form_route_fn: Function to generate async form load URL
         menu_section_title: Title for the sidebar menu section
     """
+    from cjm_fasthtml_settings import routes as settings_rt
+    
     # Get the schema identifier
     schema_id = schema.get("name")
 
@@ -126,19 +111,12 @@ def settings_content(
             schemas=schemas,
             active_schema=schema_id,
             config_dir=config_dir,
-            index_route_fn=index_route_fn,
             menu_section_title=menu_section_title
         )
         return Div(
             render_schema_settings_content(schema, config_dir),
             updated_menu
         )
-
-    # Generate form load URL
-    if load_form_route_fn:
-        load_url = load_form_route_fn(schema_id)
-    else:
-        load_url = f"/settings/load_form?id={schema_id}"
 
     # Return full settings layout with immediate sidebar and async form
     return Div(
@@ -149,7 +127,6 @@ def settings_content(
                 active_schema=schema_id,
                 config_dir=config_dir,
                 include_wrapper=True,
-                index_route_fn=index_route_fn,
                 menu_section_title=menu_section_title
             ),
             id=HtmlIds.SETTINGS_SIDEBAR,
@@ -159,7 +136,7 @@ def settings_content(
         # Form skeleton - loads asynchronously
         create_form_skeleton(
             schema_id=schema_id,
-            hx_get_url=load_url
+            hx_get_url=settings_rt.load_form.to(id=schema_id)
         ),
 
         cls=combine_classes(
