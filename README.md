@@ -46,29 +46,29 @@ graph LR
 
     components_alerts --> core_html_ids
     components_dashboard --> core_html_ids
-    components_dashboard --> components_sidebar
     components_dashboard --> core_utils
-    components_dashboard --> core_config
+    components_dashboard --> components_sidebar
     components_dashboard --> components_forms
+    components_dashboard --> core_config
     components_forms --> core_html_ids
     components_forms --> core_utils
     components_forms --> core_config
     components_sidebar --> core_html_ids
-    components_sidebar --> core_schemas
     components_sidebar --> core_config
-    core_schemas --> core_config
+    components_sidebar --> core_schemas
     core_schemas --> core_schema_group
     core_schemas --> core_schemas
+    core_schemas --> core_config
     core_utils --> core_config
-    routes --> core_html_ids
     routes --> core_config
-    routes --> components_sidebar
     routes --> core_utils
+    routes --> core_html_ids
+    routes --> components_alerts
     routes --> routes
     routes --> core_schemas
-    routes --> components_alerts
-    routes --> components_dashboard
+    routes --> components_sidebar
     routes --> components_forms
+    routes --> components_dashboard
 ```
 
 *25 cross-module dependencies detected*
