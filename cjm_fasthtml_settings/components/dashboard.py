@@ -65,8 +65,8 @@ def render_schema_settings_content(
     """
     from cjm_fasthtml_settings import routes as settings_rt
     
-    # Get the schema identifier
-    schema_id = schema.get("name")
+    # Get the schema identifier (prioritize unique_id for grouped schemas)
+    schema_id = schema.get("unique_id", schema.get("name"))
 
     # Load existing config or use defaults
     saved_config = load_config(schema_id, config_dir)

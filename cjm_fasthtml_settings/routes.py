@@ -320,7 +320,8 @@ def plugin(request, id: str):
                 schemas=registry.get_all(),
                 active_schema=id,
                 config_dir=config.config_dir,
-                menu_section_title=config.menu_section_title
+                menu_section_title=config.menu_section_title,
+                plugin_registry=config.plugin_registry
             )
         )
     
