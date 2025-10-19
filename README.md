@@ -17,14 +17,16 @@ pip install cjm_fasthtml_settings
     │   ├── dashboard.ipynb  # Settings dashboard layout components
     │   ├── forms.ipynb      # Form generation components for settings interfaces
     │   └── sidebar.ipynb    # Navigation menu components for settings sidebar
-    ├── core/ (4)
-    │   ├── config.ipynb    # Configuration constants, directory management, and base application schema
-    │   ├── html_ids.ipynb  # Centralized HTML ID constants for settings components
-    │   ├── schemas.ipynb   # Schema registry and management for settings
-    │   └── utils.ipynb     # Configuration loading, saving, and conversion utilities
-    └── routes.ipynb  # FastHTML route handlers for settings interface
+    ├── core/ (5)
+    │   ├── config.ipynb        # Configuration constants, directory management, and base application schema
+    │   ├── html_ids.ipynb      # Centralized HTML ID constants for settings components
+    │   ├── schema_group.ipynb  # Grouping related configuration schemas for better organization
+    │   ├── schemas.ipynb       # Schema registry and management for settings
+    │   └── utils.ipynb         # Configuration loading, saving, and conversion utilities
+    ├── plugins.ipynb  # Optional plugin integration for extensible settings systems
+    └── routes.ipynb   # FastHTML route handlers for settings interface
 
-Total: 9 notebooks across 2 directories
+Total: 11 notebooks across 2 directories
 
 ## Module Dependencies
 
@@ -36,37 +38,40 @@ graph LR
     components_sidebar[components.sidebar<br/>Sidebar]
     core_config[core.config<br/>Config]
     core_html_ids[core.html_ids<br/>HTML IDs]
+    core_schema_group[core.schema_group<br/>Schema Group]
     core_schemas[core.schemas<br/>Schemas]
     core_utils[core.utils<br/>Utils]
+    plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
     components_alerts --> core_html_ids
-    components_dashboard --> core_html_ids
-    components_dashboard --> components_sidebar
-    components_dashboard --> components_forms
     components_dashboard --> core_config
     components_dashboard --> core_utils
-    components_forms --> core_html_ids
+    components_dashboard --> components_sidebar
+    components_dashboard --> components_forms
+    components_dashboard --> core_html_ids
     components_forms --> core_config
+    components_forms --> core_html_ids
     components_forms --> core_utils
-    components_sidebar --> core_html_ids
-    components_sidebar --> core_schemas
     components_sidebar --> core_config
-    core_schemas --> core_schemas
+    components_sidebar --> core_schemas
+    components_sidebar --> core_html_ids
+    core_schemas --> core_schema_group
     core_schemas --> core_config
+    core_schemas --> core_schemas
     core_utils --> core_config
-    routes --> core_html_ids
-    routes --> components_forms
-    routes --> components_sidebar
+    routes --> core_utils
     routes --> routes
     routes --> components_alerts
-    routes --> core_utils
     routes --> core_config
-    routes --> components_dashboard
     routes --> core_schemas
+    routes --> components_sidebar
+    routes --> components_forms
+    routes --> core_html_ids
+    routes --> components_dashboard
 ```
 
-*24 cross-module dependencies detected*
+*25 cross-module dependencies detected*
 
 ## CLI Reference
 
@@ -216,7 +221,8 @@ def settings_content(
     schema: Dict,  # Schema to display
     schemas: Dict,  # All registered schemas for sidebar
     config_dir: Optional[Path] = None,  # Config directory
-    menu_section_title: str = "Settings"  # Sidebar section title
+    menu_section_title: str = "Settings",  # Sidebar section title
+    plugin_registry: Optional[Any] = None  # Optional plugin registry
 ) -> Div:  # Settings content layout
     """
     Return settings content with sidebar and form.
@@ -229,6 +235,7 @@ def settings_content(
         schemas: All available schemas for the sidebar
         config_dir: Config directory path
         menu_section_title: Title for the sidebar menu section
+        plugin_registry: Optional plugin registry for showing plugins in sidebar
     """
 ```
 
@@ -329,6 +336,173 @@ class HtmlIds:
         "Convert an ID to a CSS selector format (with #)."
 ````
 
+### Plugins (`plugins.ipynb`)
+
+> Optional plugin integration for extensible settings systems
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.plugins import (
+    PluginMetadata,
+    PluginRegistryProtocol,
+    SimplePluginRegistry
+)
+```
+
+#### Classes
+
+```` python
+@dataclass
+class PluginMetadata:
+    """
+    Metadata describing a plugin.
+    
+    This dataclass holds information about a plugin that can be displayed
+    in the settings UI without loading the actual plugin instance.
+    
+    The category is a simple string - applications choose their own category names
+    based on their needs (e.g., "transcription", "export", "data_processing", etc.).
+    
+    Example:
+        ```python
+        # Application defines its own categories
+        PluginMetadata(
+            name="whisper_transcriber",
+            category="transcription",  # App-specific category
+            title="Whisper Transcriber",
+            config_schema={...}
+        )
+        ```
+    
+    Attributes:
+        name: Internal plugin identifier
+        category: Plugin category string (application-defined)
+        title: Display title for the plugin
+        config_schema: JSON Schema for plugin configuration
+        description: Optional plugin description
+        version: Optional plugin version
+        is_configured: Whether the plugin has saved configuration
+    """
+    
+    name: str
+    category: str  # Application-defined category string
+    title: str
+    config_schema: Dict[str, Any]
+    description: Optional[str]
+    version: Optional[str]
+    is_configured: bool = False
+    
+    def get_unique_id(self) -> str
+        "Generate unique ID for this plugin."
+````
+
+``` python
+@runtime_checkable
+class PluginRegistryProtocol(Protocol):
+    """
+    Protocol that plugin registries should implement.
+    
+    This allows the settings library to work with any plugin system
+    that implements these methods.
+    """
+    
+    def get_plugin(self, unique_id: str) -> Optional[PluginMetadata]:
+            """Get plugin metadata by unique ID."""
+            ...
+        
+        def get_plugins_by_category(self, category: str) -> list[PluginMetadata]
+        "Get plugin metadata by unique ID."
+    
+    def get_plugins_by_category(self, category: str) -> list[PluginMetadata]:
+            """Get all plugins in a category."""
+            ...
+        
+        def get_categories_with_plugins(self) -> list[str]
+        "Get all plugins in a category."
+    
+    def get_categories_with_plugins(self) -> list[str]:
+            """Get all categories that have registered plugins."""
+            ...
+        
+        def load_plugin_config(self, unique_id: str) -> Dict[str, Any]
+        "Get all categories that have registered plugins."
+    
+    def load_plugin_config(self, unique_id: str) -> Dict[str, Any]:
+            """Load saved configuration for a plugin."""
+            ...
+        
+        def save_plugin_config(self, unique_id: str, config: Dict[str, Any]) -> bool
+        "Load saved configuration for a plugin."
+    
+    def save_plugin_config(self, unique_id: str, config: Dict[str, Any]) -> bool
+        "Save configuration for a plugin."
+```
+
+``` python
+class SimplePluginRegistry:
+    def __init__(self, config_dir: Optional[Path] = None):
+        self._plugins: Dict[str, PluginMetadata] = {}
+    """
+    Simple implementation of PluginRegistryProtocol.
+    
+    This provides a basic plugin registry that can be used with the settings
+    library. Applications with more complex needs can implement their own
+    registry that follows the PluginRegistryProtocol.
+    
+    Categories are arbitrary strings defined by the application.
+    """
+    
+    def __init__(self, config_dir: Optional[Path] = None):
+            self._plugins: Dict[str, PluginMetadata] = {}
+    
+    def register_plugin(self, metadata: PluginMetadata):
+            """Register a plugin."""
+            # Check if plugin is configured
+            config_file = self._config_dir / f"{metadata.get_unique_id()}.json"
+            metadata.is_configured = config_file.exists()
+            
+            self._plugins[metadata.get_unique_id()] = metadata
+        
+        def get_plugin(self, unique_id: str) -> Optional[PluginMetadata]
+        "Register a plugin."
+    
+    def get_plugin(self, unique_id: str) -> Optional[PluginMetadata]:
+            """Get plugin metadata by unique ID."""
+            return self._plugins.get(unique_id)
+        
+        def get_plugins_by_category(self, category: str) -> list
+        "Get plugin metadata by unique ID."
+    
+    def get_plugins_by_category(self, category: str) -> list:
+            """Get all plugins in a category."""
+            return [p for p in self._plugins.values() if p.category == category]
+        
+        def get_categories_with_plugins(self) -> list
+        "Get all plugins in a category."
+    
+    def get_categories_with_plugins(self) -> list:
+            """Get all categories that have registered plugins."""
+            categories = set(p.category for p in self._plugins.values())
+            return sorted(categories)
+        
+        def load_plugin_config(self, unique_id: str) -> Dict[str, Any]
+        "Get all categories that have registered plugins."
+    
+    def load_plugin_config(self, unique_id: str) -> Dict[str, Any]:
+            """Load saved configuration for a plugin."""
+            import json
+            config_file = self._config_dir / f"{unique_id}.json"
+            if config_file.exists()
+        "Load saved configuration for a plugin."
+    
+    def save_plugin_config(self, unique_id: str, config: Dict[str, Any]) -> bool:
+            """Save configuration for a plugin."""
+            import json
+            try
+        "Save configuration for a plugin."
+```
+
 ### Routes (`routes.ipynb`)
 
 > FastHTML route handlers for settings interface
@@ -343,23 +517,21 @@ from cjm_fasthtml_settings.routes import (
     index,
     load_form,
     save,
-    reset
+    reset,
+    plugin_reset,
+    plugin_save,
+    plugin
 )
 ```
 
 #### Functions
 
 ``` python
-def _resolve_schema(id: str):
-    """Resolve schema from ID.
+def _resolve_schema(id: str)
+    """
+    Resolve schema from ID using the registry.
     
-    Returns:
-        tuple: (schema, error_message) - schema is None if error occurred
-    """
-    schema = registry.get(id)
-    if schema
-    """
-    Resolve schema from ID.
+    Handles both direct schemas and grouped schemas via registry.resolve_schema().
     
     Returns:
         tuple: (schema, error_message) - schema is None if error occurred
@@ -466,6 +638,61 @@ def reset(id: str):
     """
 ```
 
+``` python
+@settings_ar
+def plugin_reset(id: str):
+    """Reset plugin configuration to defaults handler.
+    
+    Args:
+        id: Plugin unique ID
+    """
+    if not config.plugin_registry
+    """
+    Reset plugin configuration to defaults handler.
+    
+    Args:
+        id: Plugin unique ID
+    """
+```
+
+``` python
+@settings_ar
+async def plugin_save(request, id: str):
+    """Save plugin configuration handler.
+    
+    Args:
+        request: FastHTML request object
+        id: Plugin unique ID
+    """
+    if not config.plugin_registry
+    """
+    Save plugin configuration handler.
+    
+    Args:
+        request: FastHTML request object
+        id: Plugin unique ID
+    """
+```
+
+``` python
+@settings_ar
+def plugin(request, id: str):
+    """Plugin settings page.
+    
+    Args:
+        request: FastHTML request object
+        id: Plugin unique ID
+    """
+    if not config.plugin_registry
+    """
+    Plugin settings page.
+    
+    Args:
+        request: FastHTML request object
+        id: Plugin unique ID
+    """
+```
+
 #### Classes
 
 ```` python
@@ -481,11 +708,104 @@ class RoutesConfig:
         config.config_dir = Path("my_configs")
         config.default_schema = "database"
         config.wrap_with_layout = my_layout_function
+        config.plugin_registry = my_plugin_registry
         
         # Now import the router
         from cjm_fasthtml_settings.routes import settings_ar
         ```
     """
+````
+
+### Schema Group (`schema_group.ipynb`)
+
+> Grouping related configuration schemas for better organization
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.core.schema_group import (
+    SchemaGroup
+)
+```
+
+#### Classes
+
+```` python
+@dataclass
+class SchemaGroup:
+    """
+    A group of related configuration schemas.
+    
+    Use SchemaGroup to organize multiple related schemas under a single
+    collapsible section in the settings sidebar. This is useful for
+    applications with many configuration options.
+    
+    Example:
+        ```python
+        media_group = SchemaGroup(
+            name="media",
+            title="Media Settings",
+            schemas={
+                "scanner": MEDIA_SCAN_SCHEMA,
+                "player": MEDIA_PLAYER_SCHEMA,
+                "library": MEDIA_LIBRARY_SCHEMA
+            },
+            default_open=True,
+            description="Configure media scanning, playback, and library"
+        )
+        ```
+    
+    Attributes:
+        name: Internal identifier for the group (used in unique IDs)
+        title: Display title shown in the sidebar
+        schemas: Dictionary mapping schema keys to schema definitions
+        icon: Optional icon/SVG element for the group
+        default_open: Whether the group is expanded by default
+        description: Optional description of the group
+    """
+    
+    name: str
+    title: str
+    schemas: Dict[str, Dict[str, Any]]
+    icon: Optional[Any]
+    default_open: bool = True
+    description: Optional[str]
+    
+    def get_schema(self, schema_name: str) -> Optional[Dict[str, Any]]:
+            """Get a specific schema from the group by name."""
+            return self.schemas.get(schema_name)
+    
+        def get_unique_id(self, schema_name: str) -> str
+        "Get a specific schema from the group by name."
+    
+    def get_unique_id(self, schema_name: str) -> str:
+            """Generate a unique ID for a schema within this group.
+            
+            Format: {group_name}_{schema_name}
+            Example: "media_scanner"
+            """
+            return f"{self.name}_{schema_name}"
+    
+        def has_configured_schemas(
+            self,
+            config_dir: Path  # Directory where config files are stored
+        ) -> bool:  # True if any schema in group has saved config
+        "Generate a unique ID for a schema within this group.
+
+Format: {group_name}_{schema_name}
+Example: "media_scanner""
+    
+    def has_configured_schemas(
+            self,
+            config_dir: Path  # Directory where config files are stored
+        ) -> bool:  # True if any schema in group has saved config
+        "Check if any schemas in this group have saved configurations."
+    
+    def get_configured_schemas(
+            self,
+            config_dir: Path  # Directory where config files are stored
+        ) -> list:  # List of schema names that have saved configs
+        "Get list of configured schema names in this group."
 ````
 
 ### Schemas (`schemas.ipynb`)
@@ -503,44 +823,87 @@ from cjm_fasthtml_settings.core.schemas import (
 
 #### Classes
 
-``` python
+```` python
 class SettingsRegistry:
     def __init__(self):
-        self._schemas: Dict[str, Dict[str, Any]] = {}
+        self._schemas: Dict[str, Union[Dict[str, Any], 'SchemaGroup']] = {}
     """
-    Registry for managing settings schemas.
+    Registry for managing settings schemas and schema groups.
     
     Provides a centralized place to register and access settings schemas.
+    Supports both individual schemas and SchemaGroup objects for organizing
+    related configurations.
+    
+    Example:
+        ```python
+        from cjm_fasthtml_settings.core.schemas import registry
+        from cjm_fasthtml_settings.core.schema_group import SchemaGroup
+        
+        # Register a simple schema
+        registry.register(my_schema)
+        
+        # Register a schema group
+        registry.register(SchemaGroup(
+            name="media",
+            title="Media Settings",
+            schemas={"scanner": SCAN_SCHEMA, "player": PLAYER_SCHEMA}
+        ))
+        ```
     """
     
     def __init__(self):
-            self._schemas: Dict[str, Dict[str, Any]] = {}
+            self._schemas: Dict[str, Union[Dict[str, Any], 'SchemaGroup']] = {}
     
     def register(
             self,
-            schema: Dict[str, Any],  # JSON Schema to register
-            name: Optional[str] = None  # Optional name override (uses schema['name'] if not provided)
+            schema: Union[Dict[str, Any], 'SchemaGroup'],  # Schema or SchemaGroup to register
+            name: Optional[str] = None  # Optional name override
         )
-        "Register a settings schema.
+        "Register a settings schema or schema group.
 
-The schema must have a 'name' field, or you must provide a name parameter."
+For schemas: must have a 'name' field or provide name parameter
+For SchemaGroups: uses the group's name attribute"
     
     def get(
             self,
-            name: str  # Name of the schema to retrieve
-        ) -> Optional[Dict[str, Any]]:  # The schema dictionary, or None if not found
-        "Get a registered schema by name."
+            name: str  # Name of the schema/group to retrieve
+        ) -> Optional[Union[Dict[str, Any], 'SchemaGroup']]:  # The schema/group, or None if not found
+        "Get a registered schema or group by name."
     
-    def list_schemas(self) -> list:  # List of registered schema names
-            """List all registered schema names."""
+    def list_schemas(self) -> list:  # List of registered schema/group names
+            """List all registered schema and group names."""
             return list(self._schemas.keys())
         
-        def get_all(self) -> Dict[str, Dict[str, Any]]:  # Dictionary of all schemas
-        "List all registered schema names."
+        def get_all(self) -> Dict[str, Union[Dict[str, Any], 'SchemaGroup']]:  # All schemas and groups
+        "List all registered schema and group names."
     
-    def get_all(self) -> Dict[str, Dict[str, Any]]:  # Dictionary of all schemas
-        "Get all registered schemas."
-```
+    def get_all(self) -> Dict[str, Union[Dict[str, Any], 'SchemaGroup']]:  # All schemas and groups
+            """Get all registered schemas and groups."""
+            return self._schemas.copy()
+        
+        def resolve_schema(
+            self,
+            id: str  # Schema ID (can be 'name' or 'group_schema' format)
+        ) -> tuple:  # (schema_dict, error_message)
+        "Get all registered schemas and groups."
+    
+    def resolve_schema(
+            self,
+            id: str  # Schema ID (can be 'name' or 'group_schema' format)
+        ) -> tuple:  # (schema_dict, error_message)
+        "Resolve a schema ID to a schema dictionary.
+
+Handles both direct schemas and grouped schemas:
+- Direct: 'general' -> returns the general schema
+- Grouped: 'media_scanner' -> returns scanner schema from media group
+
+Args:
+    id: Schema identifier
+    
+Returns:
+    Tuple of (schema_dict, error_message). If successful, error_message is None.
+    If failed, schema_dict is None and error_message explains the issue."
+````
 
 ### Sidebar (`sidebar.ipynb`)
 
@@ -559,21 +922,25 @@ from cjm_fasthtml_settings.components.sidebar import (
 
 ``` python
 def create_sidebar_menu(
-    schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas to display in sidebar
+    schemas: Dict[str, Any],  # Dictionary of schemas/groups to display in sidebar
     active_schema: Optional[str] = None,  # The currently active schema name
     config_dir: Optional[Path] = None,  # Directory where config files are stored
     include_wrapper: bool = True,  # Whether to include the outer wrapper div
-    menu_section_title: str = "Settings"  # Title for the settings section
-) -> Div:  # Div or Ul element containing the sidebar menu
+    menu_section_title: str = "Settings",  # Title for the settings section
+    plugin_registry: Optional[Any] = None  # Optional plugin registry
+) -> Union[Div, Ul]:  # Div or Ul element containing the sidebar menu
     """
-    Create the sidebar navigation menu.
+    Create the sidebar navigation menu with support for schema groups and plugins.
+    
+    Renders schemas, SchemaGroup objects, and plugins (if registry provided).
     
     Args:
-        schemas: Dictionary mapping schema names to schema objects
-        active_schema: Name of the currently active schema
+        schemas: Dictionary mapping names to schemas or SchemaGroup objects
+        active_schema: Name of the currently active schema (can be 'group_schema' format)
         config_dir: Path to config directory (uses DEFAULT_CONFIG_DIR if None)
         include_wrapper: If False, returns just the Ul for OOB swaps
         menu_section_title: Title to display for the menu section
+        plugin_registry: Optional plugin registry implementing PluginRegistryProtocol
     
     Returns:
         Sidebar menu component
@@ -585,7 +952,8 @@ def create_oob_sidebar_menu(
     schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas
     active_schema: str,  # Active schema name
     config_dir: Optional[Path] = None,  # Config directory
-    menu_section_title: str = "Settings"  # Menu section title
+    menu_section_title: str = "Settings",  # Menu section title
+    plugin_registry: Optional[Any] = None  # Optional plugin registry
 )
     """
     Create sidebar menu with OOB swap attribute for HTMX.
@@ -652,7 +1020,7 @@ def get_default_values_from_schema(
 
 ``` python
 def get_config_with_defaults(
-    schema_name: str,  # Name of the schema
+    schema_name: str,  # Name of the schema (or unique_id for grouped schemas)
     schema: Dict[str, Any],  # JSON Schema dictionary
     config_dir: Optional[Path] = None  # Directory where config files are stored
 ) -> Dict[str, Any]:  # Merged configuration with defaults and saved values
@@ -661,6 +1029,8 @@ def get_config_with_defaults(
     
     Loads saved configuration and merges it with schema defaults.
     Saved values take precedence over defaults.
+    
+    For grouped schemas, uses the 'unique_id' field if present.
     """
 ```
 

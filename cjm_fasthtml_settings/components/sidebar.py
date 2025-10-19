@@ -8,7 +8,7 @@ __all__ = ['create_sidebar_menu', 'create_oob_sidebar_menu']
 # %% ../../nbs/components/sidebar.ipynb 3
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 from fasthtml.common import *
 from cjm_fasthtml_daisyui.components.navigation.menu import menu, menu_title, menu_modifiers
 from cjm_fasthtml_daisyui.components.layout.divider import divider
@@ -29,25 +29,30 @@ from ..core.html_ids import HtmlIds
 
 # %% ../../nbs/components/sidebar.ipynb 6
 def create_sidebar_menu(
-    schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas to display in sidebar
+    schemas: Dict[str, Any],  # Dictionary of schemas/groups to display in sidebar
     active_schema: Optional[str] = None,  # The currently active schema name
     config_dir: Optional[Path] = None,  # Directory where config files are stored
     include_wrapper: bool = True,  # Whether to include the outer wrapper div
-    menu_section_title: str = "Settings"  # Title for the settings section
-) -> Div:  # Div or Ul element containing the sidebar menu
-    """Create the sidebar navigation menu.
+    menu_section_title: str = "Settings",  # Title for the settings section
+    plugin_registry: Optional[Any] = None  # Optional plugin registry
+) -> Union[Div, Ul]:  # Div or Ul element containing the sidebar menu
+    """Create the sidebar navigation menu with support for schema groups and plugins.
+    
+    Renders schemas, SchemaGroup objects, and plugins (if registry provided).
     
     Args:
-        schemas: Dictionary mapping schema names to schema objects
-        active_schema: Name of the currently active schema
+        schemas: Dictionary mapping names to schemas or SchemaGroup objects
+        active_schema: Name of the currently active schema (can be 'group_schema' format)
         config_dir: Path to config directory (uses DEFAULT_CONFIG_DIR if None)
         include_wrapper: If False, returns just the Ul for OOB swaps
         menu_section_title: Title to display for the menu section
+        plugin_registry: Optional plugin registry implementing PluginRegistryProtocol
     
     Returns:
         Sidebar menu component
     """
     from cjm_fasthtml_settings import routes as settings_rt
+    from cjm_fasthtml_settings.core.schema_group import SchemaGroup
     
     if config_dir is None:
         from cjm_fasthtml_settings.core.config import DEFAULT_CONFIG_DIR
@@ -62,39 +67,155 @@ def create_sidebar_menu(
         )
     )
 
-    # Process settings schemas
-    for key, schema in schemas.items():
-        schema_name = schema.get("name")
-        is_active = active_schema == schema_name
-        is_configured = (Path(config_dir) / f"{schema_name}.json").exists()
-
-        menu_items.append(
-            Li(
-                A(
-                    Div(
-                        Span(
-                            schema.get("menu_title", schema.get("title")),
-                            cls=str(font_weight.medium if is_active else "")
+    # Process schemas and groups
+    for key, value in schemas.items():
+        if isinstance(value, SchemaGroup):
+            # Handle schema group with collapsible section
+            group = value
+            
+            # Check if any schema in the group is configured
+            group_has_config = group.has_configured_schemas(config_dir)
+            
+            # Create submenu items for each schema in the group
+            submenu_items = []
+            for schema_key, schema in group.schemas.items():
+                unique_id = group.get_unique_id(schema_key)
+                is_active = active_schema == unique_id
+                is_configured = (Path(config_dir) / f"{unique_id}.json").exists()
+                
+                submenu_items.append(
+                    Li(
+                        A(
+                            Div(
+                                Span(
+                                    schema.get("menu_title", schema.get("title")),
+                                    cls=str(font_weight.medium if is_active else "")
+                                ),
+                                Span(
+                                    "configured",
+                                    cls=combine_classes(badge, badge_colors.success, badge_sizes.xs, m.l(2))
+                                ) if is_configured else None,
+                                cls=combine_classes(flex_display, items.center, justify.between, w.full)
+                            ),
+                            href=settings_rt.index.to(id=unique_id),
+                            hx_get=settings_rt.index.to(id=unique_id),
+                            hx_target=HtmlIds.as_selector(HtmlIds.SETTINGS_CONTENT),
+                            hx_push_url="true",
+                            cls=combine_classes(
+                                menu_modifiers.active if is_active else "",
+                                transition.colors,
+                                duration(200)
+                            )
                         ),
-                        Span(
-                            "configured",
-                            cls=combine_classes(badge, badge_colors.success, badge_sizes.xs, m.l(2))
-                        ) if is_configured else None,
-                        cls=combine_classes(flex_display, items.center, justify.between, w.full)
-                    ),
-                    href=settings_rt.index.to(id=schema_name),
-                    hx_get=settings_rt.index.to(id=schema_name),
-                    hx_target=HtmlIds.as_selector(HtmlIds.SETTINGS_CONTENT),
-                    hx_push_url="true",
-                    cls=combine_classes(
-                        menu_modifiers.active if is_active else "",
-                        transition.colors,
-                        duration(200)
+                        id=HtmlIds.menu_item(unique_id)
                     )
-                ),
-                id=HtmlIds.menu_item(schema_name)
+                )
+            
+            # Create the collapsible group item
+            menu_items.append(
+                Li(
+                    Details(
+                        Summary(
+                            Div(
+                                Span(
+                                    group.title,
+                                    cls=str(font_weight.medium)
+                                ),
+                                Span(
+                                    "configured",
+                                    cls=combine_classes(badge, badge_colors.success, badge_sizes.xs, m.l(2))
+                                ) if group_has_config else None,
+                                cls=combine_classes(flex_display, items.center, justify.between, w.full)
+                            )
+                        ),
+                        Ul(
+                            *submenu_items
+                        ),
+                        open=group.default_open or any(active_schema == group.get_unique_id(sk) for sk in group.schemas.keys())
+                    )
+                )
             )
-        )
+        else:
+            # Handle individual schema (backward compatible)
+            schema = value
+            schema_name = schema.get("name")
+            is_active = active_schema == schema_name
+            is_configured = (Path(config_dir) / f"{schema_name}.json").exists()
+
+            menu_items.append(
+                Li(
+                    A(
+                        Div(
+                            Span(
+                                schema.get("menu_title", schema.get("title")),
+                                cls=str(font_weight.medium if is_active else "")
+                            ),
+                            Span(
+                                "configured",
+                                cls=combine_classes(badge, badge_colors.success, badge_sizes.xs, m.l(2))
+                            ) if is_configured else None,
+                            cls=combine_classes(flex_display, items.center, justify.between, w.full)
+                        ),
+                        href=settings_rt.index.to(id=schema_name),
+                        hx_get=settings_rt.index.to(id=schema_name),
+                        hx_target=HtmlIds.as_selector(HtmlIds.SETTINGS_CONTENT),
+                        hx_push_url="true",
+                        cls=combine_classes(
+                            menu_modifiers.active if is_active else "",
+                            transition.colors,
+                            duration(200)
+                        )
+                    ),
+                    id=HtmlIds.menu_item(schema_name)
+                )
+            )
+
+    # Add plugin sections if plugin_registry provided
+    if plugin_registry:
+        categories = plugin_registry.get_categories_with_plugins()
+        for category in categories:
+            plugins = plugin_registry.get_plugins_by_category(category)
+            if plugins:
+                menu_items.append(Li(cls=str(divider)))
+                
+                # Add category title
+                category_title = category.replace('_', ' ').title() + " Plugins"
+                menu_items.append(
+                    Li(
+                        Span(category_title, cls=str(menu_title))
+                    )
+                )
+                
+                # Add plugins in this category
+                for plugin in plugins:
+                    unique_id = plugin.get_unique_id()
+                    menu_items.append(
+                        Li(
+                            A(
+                                Div(
+                                    Span(
+                                        plugin.title,
+                                        cls=str(font_weight.medium if active_schema == unique_id else "")
+                                    ),
+                                    Span(
+                                        "configured",
+                                        cls=combine_classes(badge, badge_colors.success, badge_sizes.xs, m.l(2))
+                                    ) if plugin.is_configured else None,
+                                    cls=combine_classes(flex_display, items.center, justify.between, w.full)
+                                ),
+                                href=settings_rt.plugin.to(id=unique_id),
+                                hx_get=settings_rt.plugin.to(id=unique_id),
+                                hx_target=HtmlIds.as_selector(HtmlIds.SETTINGS_CONTENT),
+                                hx_push_url="true",
+                                cls=combine_classes(
+                                    menu_modifiers.active if active_schema == unique_id else "",
+                                    transition.colors,
+                                    duration(200)
+                                )
+                            ),
+                            id=HtmlIds.menu_item(unique_id)
+                        )
+                    )
 
     menu_ul = Ul(
         *menu_items,
@@ -126,7 +247,8 @@ def create_oob_sidebar_menu(
     schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas
     active_schema: str,  # Active schema name
     config_dir: Optional[Path] = None,  # Config directory
-    menu_section_title: str = "Settings"  # Menu section title
+    menu_section_title: str = "Settings",  # Menu section title
+    plugin_registry: Optional[Any] = None  # Optional plugin registry
 ):
     """Create sidebar menu with OOB swap attribute for HTMX.
     
@@ -137,7 +259,8 @@ def create_oob_sidebar_menu(
         active_schema=active_schema,
         config_dir=config_dir,
         include_wrapper=False,
-        menu_section_title=menu_section_title
+        menu_section_title=menu_section_title,
+        plugin_registry=plugin_registry
     )
     updated_menu.attrs['hx-swap-oob'] = 'true'
     return updated_menu

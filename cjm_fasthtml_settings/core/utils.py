@@ -77,7 +77,7 @@ def get_default_values_from_schema(
 
 # %% ../../nbs/core/utils.ipynb 14
 def get_config_with_defaults(
-    schema_name: str,  # Name of the schema
+    schema_name: str,  # Name of the schema (or unique_id for grouped schemas)
     schema: Dict[str, Any],  # JSON Schema dictionary
     config_dir: Optional[Path] = None  # Directory where config files are stored
 ) -> Dict[str, Any]:  # Merged configuration with defaults and saved values
@@ -85,8 +85,13 @@ def get_config_with_defaults(
     
     Loads saved configuration and merges it with schema defaults.
     Saved values take precedence over defaults.
+    
+    For grouped schemas, uses the 'unique_id' field if present.
     """
-    saved_config = load_config(schema_name, config_dir)
+    # Use unique_id if present (for grouped schemas), otherwise use schema_name
+    config_id = schema.get("unique_id", schema_name)
+    
+    saved_config = load_config(config_id, config_dir)
     default_values = get_default_values_from_schema(schema)
     return {**default_values, **saved_config}
 

@@ -87,7 +87,8 @@ def settings_content(
     schema: Dict,  # Schema to display
     schemas: Dict,  # All registered schemas for sidebar
     config_dir: Optional[Path] = None,  # Config directory
-    menu_section_title: str = "Settings"  # Sidebar section title
+    menu_section_title: str = "Settings",  # Sidebar section title
+    plugin_registry: Optional[Any] = None  # Optional plugin registry
 ) -> Div:  # Settings content layout
     """Return settings content with sidebar and form.
     
@@ -99,11 +100,12 @@ def settings_content(
         schemas: All available schemas for the sidebar
         config_dir: Config directory path
         menu_section_title: Title for the sidebar menu section
+        plugin_registry: Optional plugin registry for showing plugins in sidebar
     """
     from cjm_fasthtml_settings import routes as settings_rt
     
     # Get the schema identifier
-    schema_id = schema.get("name")
+    schema_id = schema.get("unique_id", schema.get("name"))
 
     # Return content with updated sidebar menu via OOB swap if HTMX request to content area
     if request.headers.get('HX-Request') and request.headers.get('HX-Target') == HtmlIds.SETTINGS_CONTENT:
@@ -111,7 +113,8 @@ def settings_content(
             schemas=schemas,
             active_schema=schema_id,
             config_dir=config_dir,
-            menu_section_title=menu_section_title
+            menu_section_title=menu_section_title,
+            plugin_registry=plugin_registry
         )
         return Div(
             render_schema_settings_content(schema, config_dir),
@@ -127,7 +130,8 @@ def settings_content(
                 active_schema=schema_id,
                 config_dir=config_dir,
                 include_wrapper=True,
-                menu_section_title=menu_section_title
+                menu_section_title=menu_section_title,
+                plugin_registry=plugin_registry
             ),
             id=HtmlIds.SETTINGS_SIDEBAR,
             cls=combine_classes(w(64), flex.shrink_0)
