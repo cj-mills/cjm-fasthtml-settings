@@ -17,7 +17,7 @@ from cjm_fasthtml_tailwind.utilities.spacing import m
 from cjm_fasthtml_tailwind.core.base import combine_classes
 
 from cjm_fasthtml_jsonschema.generators.form import generate_form_ui
-from ..core.html_ids import HtmlIds
+from ..core.html_ids import SettingsHtmlIds as HtmlIds
 
 # %% ../../nbs/components/forms.ipynb 6
 def create_settings_form(

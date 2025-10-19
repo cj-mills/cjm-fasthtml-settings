@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Callable
 from fasthtml.common import *
 
-from .components.alerts import create_error_alert, create_success_alert
-from .core.html_ids import HtmlIds
+from cjm_fasthtml_app_core.components.alerts import create_error_alert, create_success_alert
+from .core.html_ids import SettingsHtmlIds as HtmlIds
 from .core.config import DEFAULT_CONFIG_DIR
 from .core.schemas import registry
 from cjm_fasthtml_settings.core.utils import (
@@ -339,7 +339,8 @@ def plugin(request, id: str):
                 active_schema=id,
                 config_dir=config.config_dir,
                 include_wrapper=True,
-                menu_section_title=config.menu_section_title
+                menu_section_title=config.menu_section_title,
+                plugin_registry=config.plugin_registry
             ),
             cls=combine_classes(w(64), flex.shrink_0)
         ),

@@ -23,7 +23,7 @@ from cjm_fasthtml_settings.core.utils import (
     get_default_values_from_schema,
 )
 from .forms import create_settings_form_container
-from ..core.html_ids import HtmlIds
+from ..core.html_ids import SettingsHtmlIds as HtmlIds
 
 # %% ../../nbs/components/dashboard.ipynb 6
 def create_form_skeleton(

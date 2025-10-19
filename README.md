@@ -12,8 +12,7 @@ pip install cjm_fasthtml_settings
 ## Project Structure
 
     nbs/
-    ├── components/ (4)
-    │   ├── alerts.ipynb     # Alert components for displaying success, error, and warning messages
+    ├── components/ (3)
     │   ├── dashboard.ipynb  # Settings dashboard layout components
     │   ├── forms.ipynb      # Form generation components for settings interfaces
     │   └── sidebar.ipynb    # Navigation menu components for settings sidebar
@@ -26,13 +25,12 @@ pip install cjm_fasthtml_settings
     ├── plugins.ipynb  # Optional plugin integration for extensible settings systems
     └── routes.ipynb   # FastHTML route handlers for settings interface
 
-Total: 11 notebooks across 2 directories
+Total: 10 notebooks across 2 directories
 
 ## Module Dependencies
 
 ``` mermaid
 graph LR
-    components_alerts[components.alerts<br/>Alerts]
     components_dashboard[components.dashboard<br/>Dashboard]
     components_forms[components.forms<br/>Forms]
     components_sidebar[components.sidebar<br/>Sidebar]
@@ -44,34 +42,32 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_alerts --> core_html_ids
-    components_dashboard --> core_html_ids
     components_dashboard --> core_utils
+    components_dashboard --> core_config
     components_dashboard --> components_sidebar
     components_dashboard --> components_forms
-    components_dashboard --> core_config
-    components_forms --> core_html_ids
+    components_dashboard --> core_html_ids
     components_forms --> core_utils
     components_forms --> core_config
-    components_sidebar --> core_html_ids
+    components_forms --> core_html_ids
     components_sidebar --> core_config
+    components_sidebar --> core_html_ids
     components_sidebar --> core_schemas
-    core_schemas --> core_schema_group
     core_schemas --> core_schemas
     core_schemas --> core_config
+    core_schemas --> core_schema_group
     core_utils --> core_config
-    routes --> core_config
-    routes --> core_utils
-    routes --> core_html_ids
-    routes --> components_alerts
-    routes --> routes
     routes --> core_schemas
+    routes --> core_utils
+    routes --> core_config
     routes --> components_sidebar
-    routes --> components_forms
     routes --> components_dashboard
+    routes --> routes
+    routes --> components_forms
+    routes --> core_html_ids
 ```
 
-*25 cross-module dependencies detected*
+*23 cross-module dependencies detected*
 
 ## CLI Reference
 
@@ -80,53 +76,6 @@ No CLI commands found in this project.
 ## Module Overview
 
 Detailed documentation for each module in the project:
-
-### Alerts (`alerts.ipynb`)
-
-> Alert components for displaying success, error, and warning messages
-
-#### Import
-
-``` python
-from cjm_fasthtml_settings.components.alerts import (
-    create_success_alert,
-    create_error_alert,
-    create_warning_alert
-)
-```
-
-#### Functions
-
-``` python
-def _create_auto_dismiss_script(
-    timeout_ms: int = 3000  # Time in milliseconds before auto-dismiss
-) -> Script:  # Script element for auto-dismissing alerts
-    "Create a script that auto-dismisses the alert after a timeout."
-```
-
-``` python
-def create_success_alert(
-    message: str,  # The success message to display
-    timeout_ms: int = 3000  # Time in milliseconds before auto-dismiss
-) -> Div:  # Div element containing the success alert
-    "Create a success alert that auto-dismisses."
-```
-
-``` python
-def create_error_alert(
-    message: str,  # The error message to display
-    details: Optional[str] = None  # Optional additional details text
-) -> Div:  # Div element containing the error alert
-    "Create an error alert with optional details."
-```
-
-``` python
-def create_warning_alert(
-    message: str,  # The warning message to display
-    details: Optional[str] = None  # Optional additional details text
-) -> Div:  # Div element containing the warning alert
-    "Create a warning alert with optional details."
-```
 
 ### Config (`config.ipynb`)
 
@@ -294,47 +243,37 @@ def create_settings_form_container(
 
 ``` python
 from cjm_fasthtml_settings.core.html_ids import (
-    HtmlIds
+    SettingsHtmlIds
 )
 ```
 
 #### Classes
 
-```` python
-class HtmlIds:
+``` python
+class SettingsHtmlIds(AppHtmlIds):
     """
-    HTML ID constants used in settings components.
+    HTML ID constants for settings components.
     
-    This class provides centralized HTML ID constants for the settings library.
-    All IDs are defined as class attributes for IDE autocomplete and type checking.
+    This class extends AppHtmlIds from cjm_fasthtml_app_core with settings-specific IDs.
+    It inherits ALERT_CONTAINER and as_selector() from the parent class.
+    
+    Inherited from AppHtmlIds:
+        - ALERT_CONTAINER: "alert-container"
+        - MAIN_CONTENT: "main-content"
+        - as_selector(id_str): Converts an ID to CSS selector format (with #)
     
     For IDE Support:
         IDEs like VS Code with Pylance will autocomplete these attributes and warn
-        if you try to access non-existent attributes. To add app-specific IDs,
-        extend this class:
-        
-        ```python
-        class AppHtmlIds(HtmlIds):
-            MAIN_CONTENT = "main-content"
-            CUSTOM_SECTION = "custom-section"
-        ```
+        if you try to access non-existent attributes.
     
     Note:
         The typing.Final annotation indicates these are constants that shouldn't
         be reassigned at runtime.
     """
     
-    def menu_item(name: str) -> str:
-            """Generate a menu item ID for a given settings name."""
-            return f"menu-item-{name}"
-    
-        @staticmethod
-        def as_selector(id_str: str) -> str
+    def menu_item(name: str) -> str
         "Generate a menu item ID for a given settings name."
-    
-    def as_selector(id_str: str) -> str
-        "Convert an ID to a CSS selector format (with #)."
-````
+```
 
 ### Plugins (`plugins.ipynb`)
 

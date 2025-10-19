@@ -25,7 +25,7 @@ from cjm_fasthtml_tailwind.utilities.layout import position, top
 from cjm_fasthtml_tailwind.core.base import combine_classes
 from cjm_fasthtml_tailwind.utilities.transitions_and_animation import transition, duration
 
-from ..core.html_ids import HtmlIds
+from ..core.html_ids import SettingsHtmlIds as HtmlIds
 
 # %% ../../nbs/components/sidebar.ipynb 6
 def create_sidebar_menu(
@@ -235,7 +235,7 @@ def create_sidebar_menu(
             menu_ul,
             cls=combine_classes(
                 position.sticky,
-                top(20),
+                # top(20),
                 h.auto
             )
         )
