@@ -42,29 +42,29 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
+    components_dashboard --> core_html_ids
+    components_dashboard --> components_sidebar
     components_dashboard --> core_utils
     components_dashboard --> core_config
-    components_dashboard --> components_sidebar
     components_dashboard --> components_forms
-    components_dashboard --> core_html_ids
-    components_forms --> core_utils
-    components_forms --> core_config
     components_forms --> core_html_ids
-    components_sidebar --> core_config
+    components_forms --> core_config
+    components_forms --> core_utils
     components_sidebar --> core_html_ids
     components_sidebar --> core_schemas
-    core_schemas --> core_schemas
-    core_schemas --> core_config
+    components_sidebar --> core_config
     core_schemas --> core_schema_group
+    core_schemas --> core_config
+    core_schemas --> core_schemas
     core_utils --> core_config
-    routes --> core_schemas
     routes --> core_utils
-    routes --> core_config
+    routes --> core_html_ids
     routes --> components_sidebar
     routes --> components_dashboard
     routes --> routes
+    routes --> core_config
+    routes --> core_schemas
     routes --> components_forms
-    routes --> core_html_ids
 ```
 
 *23 cross-module dependencies detected*
@@ -283,58 +283,12 @@ class SettingsHtmlIds(AppHtmlIds):
 
 ``` python
 from cjm_fasthtml_settings.plugins import (
-    PluginMetadata,
     PluginRegistryProtocol,
     SimplePluginRegistry
 )
 ```
 
 #### Classes
-
-```` python
-@dataclass
-class PluginMetadata:
-    """
-    Metadata describing a plugin.
-    
-    This dataclass holds information about a plugin that can be displayed
-    in the settings UI without loading the actual plugin instance.
-    
-    The category is a simple string - applications choose their own category names
-    based on their needs (e.g., "transcription", "export", "data_processing", etc.).
-    
-    Example:
-        ```python
-        # Application defines its own categories
-        PluginMetadata(
-            name="whisper_transcriber",
-            category="transcription",  # App-specific category
-            title="Whisper Transcriber",
-            config_schema={...}
-        )
-        ```
-    
-    Attributes:
-        name: Internal plugin identifier
-        category: Plugin category string (application-defined)
-        title: Display title for the plugin
-        config_schema: JSON Schema for plugin configuration
-        description: Optional plugin description
-        version: Optional plugin version
-        is_configured: Whether the plugin has saved configuration
-    """
-    
-    name: str
-    category: str  # Application-defined category string
-    title: str
-    config_schema: Dict[str, Any]
-    description: Optional[str]
-    version: Optional[str]
-    is_configured: bool = False
-    
-    def get_unique_id(self) -> str
-        "Generate unique ID for this plugin."
-````
 
 ``` python
 @runtime_checkable
