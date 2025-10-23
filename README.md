@@ -42,29 +42,29 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> core_html_ids
-    components_dashboard --> components_sidebar
-    components_dashboard --> core_utils
-    components_dashboard --> core_config
     components_dashboard --> components_forms
+    components_dashboard --> core_html_ids
+    components_dashboard --> core_utils
+    components_dashboard --> components_sidebar
+    components_dashboard --> core_config
     components_forms --> core_html_ids
-    components_forms --> core_config
     components_forms --> core_utils
+    components_forms --> core_config
     components_sidebar --> core_html_ids
     components_sidebar --> core_schemas
     components_sidebar --> core_config
-    core_schemas --> core_schema_group
-    core_schemas --> core_config
     core_schemas --> core_schemas
+    core_schemas --> core_config
+    core_schemas --> core_schema_group
     core_utils --> core_config
-    routes --> core_utils
+    routes --> core_config
     routes --> core_html_ids
+    routes --> components_forms
+    routes --> core_utils
     routes --> components_sidebar
     routes --> components_dashboard
-    routes --> routes
-    routes --> core_config
     routes --> core_schemas
-    routes --> components_forms
+    routes --> routes
 ```
 
 *23 cross-module dependencies detected*
@@ -283,8 +283,7 @@ class SettingsHtmlIds(AppHtmlIds):
 
 ``` python
 from cjm_fasthtml_settings.plugins import (
-    PluginRegistryProtocol,
-    SimplePluginRegistry
+    PluginRegistryProtocol
 )
 ```
 
@@ -329,70 +328,6 @@ class PluginRegistryProtocol(Protocol):
         "Load saved configuration for a plugin."
     
     def save_plugin_config(self, unique_id: str, config: Dict[str, Any]) -> bool
-        "Save configuration for a plugin."
-```
-
-``` python
-class SimplePluginRegistry:
-    def __init__(self, config_dir: Optional[Path] = None):
-        self._plugins: Dict[str, PluginMetadata] = {}
-    """
-    Simple implementation of PluginRegistryProtocol.
-    
-    This provides a basic plugin registry that can be used with the settings
-    library. Applications with more complex needs can implement their own
-    registry that follows the PluginRegistryProtocol.
-    
-    Categories are arbitrary strings defined by the application.
-    """
-    
-    def __init__(self, config_dir: Optional[Path] = None):
-            self._plugins: Dict[str, PluginMetadata] = {}
-    
-    def register_plugin(self, metadata: PluginMetadata):
-            """Register a plugin."""
-            # Check if plugin is configured
-            config_file = self._config_dir / f"{metadata.get_unique_id()}.json"
-            metadata.is_configured = config_file.exists()
-            
-            self._plugins[metadata.get_unique_id()] = metadata
-        
-        def get_plugin(self, unique_id: str) -> Optional[PluginMetadata]
-        "Register a plugin."
-    
-    def get_plugin(self, unique_id: str) -> Optional[PluginMetadata]:
-            """Get plugin metadata by unique ID."""
-            return self._plugins.get(unique_id)
-        
-        def get_plugins_by_category(self, category: str) -> list
-        "Get plugin metadata by unique ID."
-    
-    def get_plugins_by_category(self, category: str) -> list:
-            """Get all plugins in a category."""
-            return [p for p in self._plugins.values() if p.category == category]
-        
-        def get_categories_with_plugins(self) -> list
-        "Get all plugins in a category."
-    
-    def get_categories_with_plugins(self) -> list:
-            """Get all categories that have registered plugins."""
-            categories = set(p.category for p in self._plugins.values())
-            return sorted(categories)
-        
-        def load_plugin_config(self, unique_id: str) -> Dict[str, Any]
-        "Get all categories that have registered plugins."
-    
-    def load_plugin_config(self, unique_id: str) -> Dict[str, Any]:
-            """Load saved configuration for a plugin."""
-            import json
-            config_file = self._config_dir / f"{unique_id}.json"
-            if config_file.exists()
-        "Load saved configuration for a plugin."
-    
-    def save_plugin_config(self, unique_id: str, config: Dict[str, Any]) -> bool:
-            """Save configuration for a plugin."""
-            import json
-            try
         "Save configuration for a plugin."
 ```
 
