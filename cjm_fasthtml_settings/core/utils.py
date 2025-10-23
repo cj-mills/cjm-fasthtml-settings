@@ -16,11 +16,7 @@ def load_config(
     schema_name: str,  # Name of the schema/configuration to load
     config_dir: Optional[Path] = None  # Directory where config files are stored
 ) -> Dict[str, Any]:  # Loaded configuration dictionary (empty dict if file doesn't exist)
-    """Load saved configuration for a schema.
-    
-    Loads a JSON configuration file from the config directory.
-    If the file doesn't exist, returns an empty dictionary.
-    """
+    """Load saved configuration for a schema."""
     if config_dir is None:
         from cjm_fasthtml_settings.core.config import DEFAULT_CONFIG_DIR
         config_dir = DEFAULT_CONFIG_DIR
@@ -37,11 +33,7 @@ def save_config(
     config: Dict[str, Any],  # Configuration dictionary to save
     config_dir: Optional[Path] = None  # Directory where config files are stored
 ) -> bool:  # True if save succeeded, False otherwise
-    """Save configuration for a schema.
-    
-    Saves a configuration dictionary as a JSON file in the config directory.
-    Creates the config directory if it doesn't exist.
-    """
+    """Save configuration for a schema."""
     if config_dir is None:
         from cjm_fasthtml_settings.core.config import DEFAULT_CONFIG_DIR
         config_dir = DEFAULT_CONFIG_DIR
@@ -62,10 +54,7 @@ def save_config(
 def get_default_values_from_schema(
     schema: Dict[str, Any]  # JSON Schema dictionary
 ) -> Dict[str, Any]:  # Dictionary of default values extracted from schema
-    """Extract default values from a JSON schema.
-    
-    Iterates through the schema's properties and extracts any 'default' values.
-    """
+    """Extract default values from a JSON schema."""
     values = {}
     properties = schema.get("properties", {})
 
@@ -81,13 +70,7 @@ def get_config_with_defaults(
     schema: Dict[str, Any],  # JSON Schema dictionary
     config_dir: Optional[Path] = None  # Directory where config files are stored
 ) -> Dict[str, Any]:  # Merged configuration with defaults and saved values
-    """Get configuration with defaults merged with saved values.
-    
-    Loads saved configuration and merges it with schema defaults.
-    Saved values take precedence over defaults.
-    
-    For grouped schemas, uses the 'unique_id' field if present.
-    """
+    """Get configuration with defaults merged with saved values."""
     # Use unique_id if present (for grouped schemas), otherwise use schema_name
     config_id = schema.get("unique_id", schema_name)
     
@@ -100,13 +83,7 @@ def convert_form_data_to_config(
     form_data: dict,  # Raw form data from request
     schema: Dict[str, Any]  # JSON Schema for type conversion
 ) -> dict:  # Converted configuration dictionary
-    """Convert form data to configuration dict based on schema.
-    
-    Handles type conversions for:
-    - Boolean fields (checkboxes)
-    - Integer and number fields
-    - Array fields (comma-separated or Python list format)
-    """
+    """Convert form data to configuration dict based on schema."""
     config = dict(form_data)
 
     # Handle boolean fields (checkboxes)

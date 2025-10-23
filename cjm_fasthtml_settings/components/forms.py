@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from fasthtml.common import *
+from fasthtml.common import FT
 from cjm_fasthtml_daisyui.components.actions.button import btn, btn_colors, btn_styles
 from cjm_fasthtml_daisyui.components.data_display.card import card_actions
 from cjm_fasthtml_daisyui.utilities.semantic_colors import border_dui
@@ -25,12 +26,8 @@ def create_settings_form(
     values: Dict[str, Any],  # Current values for the form fields
     post_url: str,  # URL for form submission
     reset_url: str  # URL for resetting form to defaults
-) -> Form:  # Form element with settings and action buttons
-    """Create a settings form with action buttons.
-    
-    Generates a form using cjm-fasthtml-jsonschema based on the provided schema,
-    with Save and Reset buttons.
-    """
+) -> FT:  # Form element with settings and action buttons
+    """Create a settings form with action buttons."""
 
     # Build button attributes for Save button
     save_button_attrs = {
@@ -96,12 +93,8 @@ def create_settings_form_container(
     reset_url: str,  # URL for resetting form to defaults
     alert_message: Optional[Any] = None,  # Optional alert element to display
     use_alert_container: bool = False  # If True, add empty alert-container div
-) -> Div:  # Div containing the alert (if any) and the settings form
-    """Create a container with optional alert and settings form.
-    
-    This is useful for wrapping a settings form with an alert area that can
-    display success/error messages.
-    """
+) -> FT:  # Div containing the alert (if any) and the settings form
+    """Create a container with optional alert and settings form."""
     children = []
 
     # Add alert or alert container

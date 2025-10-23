@@ -5,29 +5,12 @@
 # %% auto 0
 __all__ = ['SettingsHtmlIds']
 
-# %% ../../nbs/core/html_ids.ipynb 4
+# %% ../../nbs/core/html_ids.ipynb 5
 from typing import Final
 from cjm_fasthtml_app_core.core.html_ids import AppHtmlIds
 
 class SettingsHtmlIds(AppHtmlIds):
-    """HTML ID constants for settings components.
-    
-    This class extends AppHtmlIds from cjm_fasthtml_app_core with settings-specific IDs.
-    It inherits ALERT_CONTAINER and as_selector() from the parent class.
-    
-    Inherited from AppHtmlIds:
-        - ALERT_CONTAINER: "alert-container"
-        - MAIN_CONTENT: "main-content"
-        - as_selector(id_str): Converts an ID to CSS selector format (with #)
-    
-    For IDE Support:
-        IDEs like VS Code with Pylance will autocomplete these attributes and warn
-        if you try to access non-existent attributes.
-    
-    Note:
-        The typing.Final annotation indicates these are constants that shouldn't
-        be reassigned at runtime.
-    """
+    """HTML ID constants for settings components."""
 
     # Settings-specific containers
     SETTINGS_CONTENT: Final[str] = "settings-content"
@@ -37,6 +20,8 @@ class SettingsHtmlIds(AppHtmlIds):
     SIDEBAR_MENU: Final[str] = "sidebar-menu"
 
     @staticmethod
-    def menu_item(name: str) -> str:
+    def menu_item(
+        name: str  # Settings name
+    ) -> str:  # Menu item ID
         """Generate a menu item ID for a given settings name."""
         return f"menu-item-{name}"

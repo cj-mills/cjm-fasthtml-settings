@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional, Callable
 from fasthtml.common import *
+from fasthtml.common import FT
 
 from cjm_fasthtml_app_core.components.alerts import create_error_alert, create_success_alert
 from .core.html_ids import SettingsHtmlIds as HtmlIds
@@ -28,22 +29,7 @@ from .components.sidebar import create_oob_sidebar_menu, create_sidebar_menu
 # %% ../nbs/routes.ipynb 6
 # Configuration settings that users can override
 class RoutesConfig:
-    """Configuration for settings routes behavior.
-    
-    Users can modify these before importing the router:
-    
-    Example:
-        ```python
-        from cjm_fasthtml_settings.routes import config
-        config.config_dir = Path("my_configs")
-        config.default_schema = "database"
-        config.wrap_with_layout = my_layout_function
-        config.plugin_registry = my_plugin_registry
-        
-        # Now import the router
-        from cjm_fasthtml_settings.routes import settings_ar
-        ```
-    """
+    """Configuration for settings routes behavior."""
     config_dir: Path = DEFAULT_CONFIG_DIR
     default_schema: str = "general"
     menu_section_title: str = "Settings"
@@ -54,18 +40,19 @@ class RoutesConfig:
 config = RoutesConfig()
 
 # %% ../nbs/routes.ipynb 9
-def _resolve_schema(id: str):
-    """Resolve schema from ID using the registry.
-    
-    Handles both direct schemas and grouped schemas via registry.resolve_schema().
-    
-    Returns:
-        tuple: (schema, error_message) - schema is None if error occurred
-    """
+def _resolve_schema(
+    id: str  # Schema ID
+) -> tuple:  # (schema, error_message)
+    """Resolve schema from ID using the registry."""
     return registry.resolve_schema(id)
 
 # %% ../nbs/routes.ipynb 10
-def _handle_htmx_request(request, content_fn: Callable, *args, **kwargs):
+def _handle_htmx_request(
+    request,  # FastHTML request object
+    content_fn: Callable,  # Function to generate content
+    *args,  # Positional arguments for content_fn
+    **kwargs  # Keyword arguments for content_fn
+) -> FT:  # Response content
     """Handle HTMX vs full page response pattern."""
     content = content_fn(*args, **kwargs)
     
@@ -80,13 +67,13 @@ def _handle_htmx_request(request, content_fn: Callable, *args, **kwargs):
 
 # %% ../nbs/routes.ipynb 11
 def _create_settings_response(
-    schema: Dict[str, Any],
-    values: Dict[str, Any],
-    save_url: str,
-    reset_url: str,
-    alert_msg,
-    sidebar_id: str
-):
+    schema: Dict[str, Any],  # Schema dictionary
+    values: Dict[str, Any],  # Form values
+    save_url: str,  # URL for saving
+    reset_url: str,  # URL for resetting
+    alert_msg,  # Alert message element
+    sidebar_id: str  # Active sidebar ID
+) -> FT:  # Settings form with sidebar
     """Create standardized settings form response with sidebar."""
     return Div(
         create_settings_form_container(
@@ -111,13 +98,11 @@ settings_ar = APIRouter(prefix="/settings")
 
 # %% ../nbs/routes.ipynb 15
 @settings_ar
-def index(request, id: str = None):
-    """Main settings page.
-    
-    Args:
-        request: FastHTML request object
-        id: Schema ID to display (defaults to config.default_schema)
-    """
+def index(
+    request,  # FastHTML request object
+    id: str = None  # Schema ID to display (defaults to config.default_schema)
+) -> FT:  # Settings page content
+    """Main settings page."""
     if id is None:
         id = config.default_schema
         
@@ -136,12 +121,10 @@ def index(request, id: str = None):
 
 # %% ../nbs/routes.ipynb 16
 @settings_ar
-def load_form(id: str = None):
-    """Async endpoint that loads the settings form.
-    
-    Args:
-        id: Schema ID to load (defaults to config.default_schema)
-    """
+def load_form(
+    id: str = None  # Schema ID to load (defaults to config.default_schema)
+) -> FT:  # Settings form content
+    """Async endpoint that loads the settings form."""
     from cjm_fasthtml_tailwind.utilities.flexbox_and_grid import flex
     from cjm_fasthtml_tailwind.utilities.sizing import min_h
     from cjm_fasthtml_tailwind.core.base import combine_classes
@@ -162,13 +145,11 @@ def load_form(id: str = None):
 
 # %% ../nbs/routes.ipynb 17
 @settings_ar
-async def save(request, id: str):
-    """Save configuration handler.
-    
-    Args:
-        request: FastHTML request object
-        id: Schema ID to save
-    """
+async def save(
+    request,  # FastHTML request object
+    id: str  # Schema ID to save
+) -> FT:  # Response with form or error
+    """Save configuration handler."""
     schema, error_msg = _resolve_schema(id)
     if error_msg:
         return create_error_alert(error_msg)
@@ -191,12 +172,10 @@ async def save(request, id: str):
 
 # %% ../nbs/routes.ipynb 18
 @settings_ar
-def reset(id: str):
-    """Reset configuration to defaults handler.
-    
-    Args:
-        id: Schema ID to reset
-    """
+def reset(
+    id: str  # Schema ID to reset
+) -> FT:  # Response with form or error
+    """Reset configuration to defaults handler."""
     schema, error_msg = _resolve_schema(id)
     if error_msg:
         return create_error_alert(error_msg)
@@ -215,12 +194,10 @@ def reset(id: str):
 
 # %% ../nbs/routes.ipynb 20
 @settings_ar
-def plugin_reset(id: str):
-    """Reset plugin configuration to defaults handler.
-    
-    Args:
-        id: Plugin unique ID
-    """
+def plugin_reset(
+    id: str  # Plugin unique ID
+) -> FT:  # Response with form or error
+    """Reset plugin configuration to defaults handler."""
     if not config.plugin_registry:
         return create_error_alert("Plugin system not configured")
     
@@ -242,13 +219,11 @@ def plugin_reset(id: str):
 
 # %% ../nbs/routes.ipynb 21
 @settings_ar
-async def plugin_save(request, id: str):
-    """Save plugin configuration handler.
-    
-    Args:
-        request: FastHTML request object
-        id: Plugin unique ID
-    """
+async def plugin_save(
+    request,  # FastHTML request object
+    id: str  # Plugin unique ID
+) -> FT:  # Response with form or error
+    """Save plugin configuration handler."""
     if not config.plugin_registry:
         return create_error_alert("Plugin system not configured")
     
@@ -275,13 +250,11 @@ async def plugin_save(request, id: str):
 
 # %% ../nbs/routes.ipynb 22
 @settings_ar
-def plugin(request, id: str):
-    """Plugin settings page.
-    
-    Args:
-        request: FastHTML request object
-        id: Plugin unique ID
-    """
+def plugin(
+    request,  # FastHTML request object
+    id: str  # Plugin unique ID
+) -> FT:  # Plugin settings page content
+    """Plugin settings page."""
     if not config.plugin_registry:
         return create_error_alert("Plugin system not configured")
     

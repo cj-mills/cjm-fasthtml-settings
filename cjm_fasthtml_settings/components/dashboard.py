@@ -29,12 +29,8 @@ from ..core.html_ids import SettingsHtmlIds as HtmlIds
 def create_form_skeleton(
     schema_id: str,  # The schema ID for the settings
     hx_get_url: str  # URL to fetch the actual form content
-) -> Div:  # Div element with loading trigger
-    """Create a loading skeleton for the settings form that loads asynchronously.
-    
-    This provides a placeholder that triggers an HTMX request to load the actual form,
-    improving perceived performance for complex forms.
-    """
+) -> FT:  # Div element with loading trigger
+    """Create a loading skeleton for the settings form that loads asynchronously."""
     return Div(
         # Loading spinner centered (could add actual loading UI here)
         Div(
@@ -57,12 +53,7 @@ def render_schema_settings_content(
     schema: Dict,  # JSON schema for the settings
     config_dir: Optional[Path] = None  # Config directory path
 ) -> FT:  # Settings form container
-    """Render settings content for a schema-based configuration.
-    
-    Args:
-        schema: The JSON schema to render
-        config_dir: Directory where configs are stored
-    """
+    """Render settings content for a schema-based configuration."""
     from cjm_fasthtml_settings import routes as settings_rt
     
     # Get the schema identifier (prioritize unique_id for grouped schemas)
@@ -89,19 +80,8 @@ def settings_content(
     config_dir: Optional[Path] = None,  # Config directory
     menu_section_title: str = "Settings",  # Sidebar section title
     plugin_registry: Optional[Any] = None  # Optional plugin registry
-) -> Div:  # Settings content layout
-    """Return settings content with sidebar and form.
-    
-    Handles both full page loads and HTMX partial updates.
-    
-    Args:
-        request: The request object (to check for HTMX)
-        schema: The schema to display
-        schemas: All available schemas for the sidebar
-        config_dir: Config directory path
-        menu_section_title: Title for the sidebar menu section
-        plugin_registry: Optional plugin registry for showing plugins in sidebar
-    """
+) -> FT:  # Settings content layout
+    """Return settings content with sidebar and form."""
     from cjm_fasthtml_settings import routes as settings_rt
     
     # Get the schema identifier

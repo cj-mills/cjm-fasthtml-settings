@@ -10,38 +10,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-# %% ../../nbs/core/schema_group.ipynb 4
+# %% ../../nbs/core/schema_group.ipynb 5
 @dataclass
 class SchemaGroup:
-    """A group of related configuration schemas.
-    
-    Use SchemaGroup to organize multiple related schemas under a single
-    collapsible section in the settings sidebar. This is useful for
-    applications with many configuration options.
-    
-    Example:
-        ```python
-        media_group = SchemaGroup(
-            name="media",
-            title="Media Settings",
-            schemas={
-                "scanner": MEDIA_SCAN_SCHEMA,
-                "player": MEDIA_PLAYER_SCHEMA,
-                "library": MEDIA_LIBRARY_SCHEMA
-            },
-            default_open=True,
-            description="Configure media scanning, playback, and library"
-        )
-        ```
-    
-    Attributes:
-        name: Internal identifier for the group (used in unique IDs)
-        title: Display title shown in the sidebar
-        schemas: Dictionary mapping schema keys to schema definitions
-        icon: Optional icon/SVG element for the group
-        default_open: Whether the group is expanded by default
-        description: Optional description of the group
-    """
+    """A group of related configuration schemas."""
     name: str
     title: str
     schemas: Dict[str, Dict[str, Any]]
@@ -49,16 +21,18 @@ class SchemaGroup:
     default_open: bool = True
     description: Optional[str] = None
 
-    def get_schema(self, schema_name: str) -> Optional[Dict[str, Any]]:
+    def get_schema(
+        self, 
+        schema_name: str  # Schema name
+    ) -> Optional[Dict[str, Any]]:  # Schema dictionary or None
         """Get a specific schema from the group by name."""
         return self.schemas.get(schema_name)
 
-    def get_unique_id(self, schema_name: str) -> str:
-        """Generate a unique ID for a schema within this group.
-        
-        Format: {group_name}_{schema_name}
-        Example: "media_scanner"
-        """
+    def get_unique_id(
+        self, 
+        schema_name: str  # Schema name
+    ) -> str:  # Unique ID in format: {group_name}_{schema_name}
+        """Generate a unique ID for a schema within this group."""
         return f"{self.name}_{schema_name}"
 
     def has_configured_schemas(

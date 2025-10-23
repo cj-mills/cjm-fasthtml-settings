@@ -9,30 +9,9 @@ __all__ = ['registry', 'SettingsRegistry']
 from pathlib import Path
 from typing import Dict, Any, Optional, Union
 
-# %% ../../nbs/core/schemas.ipynb 5
+# %% ../../nbs/core/schemas.ipynb 6
 class SettingsRegistry:
-    """Registry for managing settings schemas and schema groups.
-    
-    Provides a centralized place to register and access settings schemas.
-    Supports both individual schemas and SchemaGroup objects for organizing
-    related configurations.
-    
-    Example:
-        ```python
-        from cjm_fasthtml_settings.core.schemas import registry
-        from cjm_fasthtml_settings.core.schema_group import SchemaGroup
-        
-        # Register a simple schema
-        registry.register(my_schema)
-        
-        # Register a schema group
-        registry.register(SchemaGroup(
-            name="media",
-            title="Media Settings",
-            schemas={"scanner": SCAN_SCHEMA, "player": PLAYER_SCHEMA}
-        ))
-        ```
-    """
+    """Registry for managing settings schemas and schema groups."""
     
     def __init__(self):
         self._schemas: Dict[str, Union[Dict[str, Any], 'SchemaGroup']] = {}
@@ -42,11 +21,7 @@ class SettingsRegistry:
         schema: Union[Dict[str, Any], 'SchemaGroup'],  # Schema or SchemaGroup to register
         name: Optional[str] = None  # Optional name override
     ):
-        """Register a settings schema or schema group.
-        
-        For schemas: must have a 'name' field or provide name parameter
-        For SchemaGroups: uses the group's name attribute
-        """
+        """Register a settings schema or schema group."""
         # Import here to avoid circular dependency
         from cjm_fasthtml_settings.core.schema_group import SchemaGroup
         
@@ -66,11 +41,15 @@ class SettingsRegistry:
         """Get a registered schema or group by name."""
         return self._schemas.get(name)
     
-    def list_schemas(self) -> list:  # List of registered schema/group names
+    def list_schemas(
+        self
+    ) -> list:  # List of registered schema/group names
         """List all registered schema and group names."""
         return list(self._schemas.keys())
     
-    def get_all(self) -> Dict[str, Union[Dict[str, Any], 'SchemaGroup']]:  # All schemas and groups
+    def get_all(
+        self
+    ) -> Dict[str, Union[Dict[str, Any], 'SchemaGroup']]:  # All schemas and groups
         """Get all registered schemas and groups."""
         return self._schemas.copy()
     
@@ -78,19 +57,7 @@ class SettingsRegistry:
         self,
         id: str  # Schema ID (can be 'name' or 'group_schema' format)
     ) -> tuple:  # (schema_dict, error_message)
-        """Resolve a schema ID to a schema dictionary.
-        
-        Handles both direct schemas and grouped schemas:
-        - Direct: 'general' -> returns the general schema
-        - Grouped: 'media_scanner' -> returns scanner schema from media group
-        
-        Args:
-            id: Schema identifier
-            
-        Returns:
-            Tuple of (schema_dict, error_message). If successful, error_message is None.
-            If failed, schema_dict is None and error_message explains the issue.
-        """
+        """Resolve a schema ID to a schema dictionary."""
         from cjm_fasthtml_settings.core.schema_group import SchemaGroup
         
         # Try direct lookup first
@@ -115,7 +82,7 @@ class SettingsRegistry:
         
         return None, f"Settings '{id}' not found"
 
-# %% ../../nbs/core/schemas.ipynb 12
+# %% ../../nbs/core/schemas.ipynb 13
 # Module-level registry instance
 # This is the single source of truth for all settings schemas
 # Routes and other modules will import and use this instance

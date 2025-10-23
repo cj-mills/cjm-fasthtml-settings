@@ -25,14 +25,7 @@ def get_app_config_schema(
     include_theme: bool = True,  # Whether to include theme selection
     **extra_properties  # Additional custom properties to add to the schema
 ) -> Dict[str, Any]:  # JSON Schema for application configuration
-    """Generate a customizable application configuration schema.
-    
-    This function creates a JSON Schema for application settings that can be customized
-    with your own defaults and additional properties.
-    
-    Returns:
-        A JSON Schema dictionary with application configuration structure
-    """
+    """Generate a customizable application configuration schema."""
     
     schema = {
         "type": "object",

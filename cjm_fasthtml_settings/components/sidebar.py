@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
 from fasthtml.common import *
+from fasthtml.common import FT
 from cjm_fasthtml_daisyui.components.navigation.menu import menu, menu_title, menu_modifiers
 from cjm_fasthtml_daisyui.components.layout.divider import divider
 from cjm_fasthtml_daisyui.components.data_display.badge import badge, badge_colors, badge_sizes
@@ -35,22 +36,8 @@ def create_sidebar_menu(
     include_wrapper: bool = True,  # Whether to include the outer wrapper div
     menu_section_title: str = "Settings",  # Title for the settings section
     plugin_registry: Optional[Any] = None  # Optional plugin registry
-) -> Union[Div, Ul]:  # Div or Ul element containing the sidebar menu
-    """Create the sidebar navigation menu with support for schema groups and plugins.
-    
-    Renders schemas, SchemaGroup objects, and plugins (if registry provided).
-    
-    Args:
-        schemas: Dictionary mapping names to schemas or SchemaGroup objects
-        active_schema: Name of the currently active schema (can be 'group_schema' format)
-        config_dir: Path to config directory (uses DEFAULT_CONFIG_DIR if None)
-        include_wrapper: If False, returns just the Ul for OOB swaps
-        menu_section_title: Title to display for the menu section
-        plugin_registry: Optional plugin registry implementing PluginRegistryProtocol
-    
-    Returns:
-        Sidebar menu component
-    """
+) -> FT:  # Div or Ul element containing the sidebar menu
+    """Create the sidebar navigation menu with support for schema groups and plugins."""
     from cjm_fasthtml_settings import routes as settings_rt
     from cjm_fasthtml_settings.core.schema_group import SchemaGroup
     
@@ -249,11 +236,8 @@ def create_oob_sidebar_menu(
     config_dir: Optional[Path] = None,  # Config directory
     menu_section_title: str = "Settings",  # Menu section title
     plugin_registry: Optional[Any] = None  # Optional plugin registry
-):
-    """Create sidebar menu with OOB swap attribute for HTMX.
-    
-    This is useful for updating the sidebar menu without a full page reload.
-    """
+) -> FT:  # Sidebar menu with OOB swap attribute
+    """Create sidebar menu with OOB swap attribute for HTMX."""
     updated_menu = create_sidebar_menu(
         schemas=schemas,
         active_schema=active_schema,

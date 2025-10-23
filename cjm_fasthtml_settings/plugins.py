@@ -16,28 +16,39 @@ from cjm_fasthtml_plugins.core.metadata import PluginMetadata
 # %% ../nbs/plugins.ipynb 8
 @runtime_checkable
 class PluginRegistryProtocol(Protocol):
-    """Protocol that plugin registries should implement.
+    """Protocol that plugin registries should implement."""
     
-    This allows the settings library to work with any plugin system
-    that implements these methods.
-    """
-    
-    def get_plugin(self, unique_id: str) -> Optional[PluginMetadata]:
+    def get_plugin(
+        self, 
+        unique_id: str  # Plugin unique ID
+    ) -> Optional[PluginMetadata]:  # Plugin metadata or None
         """Get plugin metadata by unique ID."""
         ...
     
-    def get_plugins_by_category(self, category: str) -> list[PluginMetadata]:
+    def get_plugins_by_category(
+        self, 
+        category: str  # Category name
+    ) -> list[PluginMetadata]:  # List of plugins in category
         """Get all plugins in a category."""
         ...
     
-    def get_categories_with_plugins(self) -> list[str]:
+    def get_categories_with_plugins(
+        self
+    ) -> list[str]:  # List of category names
         """Get all categories that have registered plugins."""
         ...
     
-    def load_plugin_config(self, unique_id: str) -> Dict[str, Any]:
+    def load_plugin_config(
+        self, 
+        unique_id: str  # Plugin unique ID
+    ) -> Dict[str, Any]:  # Loaded configuration
         """Load saved configuration for a plugin."""
         ...
     
-    def save_plugin_config(self, unique_id: str, config: Dict[str, Any]) -> bool:
+    def save_plugin_config(
+        self, 
+        unique_id: str,  # Plugin unique ID
+        config: Dict[str, Any]  # Configuration to save
+    ) -> bool:  # True if save succeeded
         """Save configuration for a plugin."""
         ...
