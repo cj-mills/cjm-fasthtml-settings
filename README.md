@@ -42,29 +42,29 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> core_config
     components_dashboard --> components_sidebar
-    components_dashboard --> core_utils
-    components_dashboard --> core_html_ids
     components_dashboard --> components_forms
-    components_forms --> core_config
+    components_dashboard --> core_utils
+    components_dashboard --> core_config
+    components_dashboard --> core_html_ids
     components_forms --> core_utils
+    components_forms --> core_config
     components_forms --> core_html_ids
-    components_sidebar --> core_schemas
     components_sidebar --> core_config
     components_sidebar --> core_html_ids
+    components_sidebar --> core_schemas
     core_schemas --> core_schemas
-    core_schemas --> core_config
     core_schemas --> core_schema_group
+    core_schemas --> core_config
     core_utils --> core_config
     routes --> core_utils
-    routes --> core_config
     routes --> components_sidebar
+    routes --> components_dashboard
+    routes --> core_config
     routes --> routes
     routes --> core_schemas
-    routes --> core_html_ids
-    routes --> components_dashboard
     routes --> components_forms
+    routes --> core_html_ids
 ```
 
 *23 cross-module dependencies detected*

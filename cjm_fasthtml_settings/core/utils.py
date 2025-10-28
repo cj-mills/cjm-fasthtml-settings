@@ -11,7 +11,16 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-# %% ../../nbs/core/utils.ipynb 6
+# %% ../../nbs/core/utils.ipynb 4
+# Optional: Import error handling library if available
+try:
+    from cjm_error_handling.core.base import ErrorContext, ErrorSeverity
+    from cjm_error_handling.core.errors import ConfigurationError, ValidationError
+    _has_error_handling = True
+except ImportError:
+    _has_error_handling = False
+
+# %% ../../nbs/core/utils.ipynb 7
 def load_config(
     schema_name: str,  # Name of the schema/configuration to load
     config_dir: Optional[Path] = None  # Directory where config files are stored
@@ -22,12 +31,45 @@ def load_config(
         config_dir = DEFAULT_CONFIG_DIR
         
     config_file = Path(config_dir) / f"{schema_name}.json"
-    if config_file.exists():
+    
+    if not config_file.exists():
+        return {}
+    
+    try:
         with open(config_file, "r") as f:
             return json.load(f)
-    return {}
+    except json.JSONDecodeError as e:
+        if _has_error_handling:
+            raise ConfigurationError(
+                message=f"Failed to parse configuration file: {schema_name}",
+                debug_info=f"JSON decode error at line {e.lineno}, column {e.colno}: {e.msg}",
+                context=ErrorContext(
+                    operation="load_config",
+                    extra={"schema_name": schema_name}
+                ),
+                config_path=str(config_file),
+                cause=e
+            )
+        else:
+            print(f"Error parsing config file {config_file}: {e}")
+            return {}
+    except Exception as e:
+        if _has_error_handling:
+            raise ConfigurationError(
+                message=f"Failed to load configuration: {schema_name}",
+                debug_info=f"Error reading config file: {str(e)}",
+                context=ErrorContext(
+                    operation="load_config",
+                    extra={"schema_name": schema_name}
+                ),
+                config_path=str(config_file),
+                cause=e
+            )
+        else:
+            print(f"Error loading config file {config_file}: {e}")
+            return {}
 
-# %% ../../nbs/core/utils.ipynb 8
+# %% ../../nbs/core/utils.ipynb 9
 def save_config(
     schema_name: str,  # Name of the schema/configuration to save
     config: Dict[str, Any],  # Configuration dictionary to save
@@ -46,11 +88,38 @@ def save_config(
         with open(config_file, "w") as f:
             json.dump(config, f, indent=2)
         return True
+    except PermissionError as e:
+        if _has_error_handling:
+            raise ConfigurationError(
+                message="Permission denied saving configuration",
+                debug_info=f"Cannot write to {config_dir}: {str(e)}",
+                context=ErrorContext(
+                    operation="save_config",
+                    extra={"schema_name": schema_name}
+                ),
+                config_path=str(config_dir / f"{schema_name}.json"),
+                cause=e
+            )
+        else:
+            print(f"Permission error saving config: {e}")
+            return False
     except Exception as e:
-        print(f"Error saving config: {e}")
-        return False
+        if _has_error_handling:
+            raise ConfigurationError(
+                message=f"Failed to save configuration: {schema_name}",
+                debug_info=f"Error writing config file: {str(e)}",
+                context=ErrorContext(
+                    operation="save_config",
+                    extra={"schema_name": schema_name}
+                ),
+                config_path=str(config_dir / f"{schema_name}.json") if config_dir else None,
+                cause=e
+            )
+        else:
+            print(f"Error saving config: {e}")
+            return False
 
-# %% ../../nbs/core/utils.ipynb 11
+# %% ../../nbs/core/utils.ipynb 12
 def get_default_values_from_schema(
     schema: Dict[str, Any]  # JSON Schema dictionary
 ) -> Dict[str, Any]:  # Dictionary of default values extracted from schema
@@ -64,7 +133,7 @@ def get_default_values_from_schema(
 
     return values
 
-# %% ../../nbs/core/utils.ipynb 14
+# %% ../../nbs/core/utils.ipynb 15
 def get_config_with_defaults(
     schema_name: str,  # Name of the schema (or unique_id for grouped schemas)
     schema: Dict[str, Any],  # JSON Schema dictionary
@@ -78,7 +147,7 @@ def get_config_with_defaults(
     default_values = get_default_values_from_schema(schema)
     return {**default_values, **saved_config}
 
-# %% ../../nbs/core/utils.ipynb 17
+# %% ../../nbs/core/utils.ipynb 18
 def convert_form_data_to_config(
     form_data: dict,  # Raw form data from request
     schema: Dict[str, Any]  # JSON Schema for type conversion

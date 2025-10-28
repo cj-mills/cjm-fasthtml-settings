@@ -26,7 +26,16 @@ from .components.dashboard import settings_content, render_schema_settings_conte
 from .components.forms import create_settings_form_container
 from .components.sidebar import create_oob_sidebar_menu, create_sidebar_menu
 
-# %% ../nbs/routes.ipynb 6
+# %% ../nbs/routes.ipynb 4
+# Optional: Import error handling library if available
+try:
+    from cjm_error_handling.core.base import ErrorContext, ErrorSeverity
+    from cjm_error_handling.core.errors import ConfigurationError, ValidationError
+    _has_error_handling = True
+except ImportError:
+    _has_error_handling = False
+
+# %% ../nbs/routes.ipynb 7
 # Configuration settings that users can override
 class RoutesConfig:
     """Configuration for settings routes behavior."""
@@ -39,7 +48,7 @@ class RoutesConfig:
 # Module-level config instance
 config = RoutesConfig()
 
-# %% ../nbs/routes.ipynb 7
+# %% ../nbs/routes.ipynb 8
 def configure_settings(
     config_dir: Path = None,  # Directory for storing configuration files
     wrap_with_layout: Callable = None,  # Function to wrap full page content with app layout
@@ -83,14 +92,14 @@ def configure_settings(
     
     return config
 
-# %% ../nbs/routes.ipynb 10
+# %% ../nbs/routes.ipynb 12
 def _resolve_schema(
     id: str  # Schema ID
 ) -> tuple:  # (schema, error_message)
     """Resolve schema from ID using the registry."""
     return registry.resolve_schema(id)
 
-# %% ../nbs/routes.ipynb 11
+# %% ../nbs/routes.ipynb 13
 def _handle_htmx_request(
     request,  # FastHTML request object
     content_fn: Callable,  # Function to generate content
@@ -109,7 +118,7 @@ def _handle_htmx_request(
         return config.wrap_with_layout(content)
     return content
 
-# %% ../nbs/routes.ipynb 12
+# %% ../nbs/routes.ipynb 14
 def _create_settings_response(
     schema: Dict[str, Any],  # Schema dictionary
     values: Dict[str, Any],  # Form values
@@ -136,11 +145,11 @@ def _create_settings_response(
         )
     )
 
-# %% ../nbs/routes.ipynb 15
+# %% ../nbs/routes.ipynb 17
 # Module-level API router
 settings_ar = APIRouter(prefix="/settings")
 
-# %% ../nbs/routes.ipynb 16
+# %% ../nbs/routes.ipynb 18
 @settings_ar
 def index(
     request,  # FastHTML request object
@@ -163,7 +172,7 @@ def index(
         plugin_registry=config.plugin_registry
     )
 
-# %% ../nbs/routes.ipynb 17
+# %% ../nbs/routes.ipynb 19
 @settings_ar
 def load_form(
     id: str = None  # Schema ID to load (defaults to config.default_schema)
@@ -187,7 +196,7 @@ def load_form(
         cls=combine_classes(flex(1), min_h(0))
     )
 
-# %% ../nbs/routes.ipynb 18
+# %% ../nbs/routes.ipynb 20
 @settings_ar
 async def save(
     request,  # FastHTML request object
@@ -214,7 +223,7 @@ async def save(
     else:
         return create_error_alert(f"Failed to save {schema.get('title')} configuration")
 
-# %% ../nbs/routes.ipynb 19
+# %% ../nbs/routes.ipynb 21
 @settings_ar
 def reset(
     id: str  # Schema ID to reset
@@ -236,7 +245,7 @@ def reset(
         sidebar_id=id
     )
 
-# %% ../nbs/routes.ipynb 21
+# %% ../nbs/routes.ipynb 23
 @settings_ar
 def plugin_reset(
     id: str  # Plugin unique ID
@@ -261,7 +270,7 @@ def plugin_reset(
         sidebar_id=id
     )
 
-# %% ../nbs/routes.ipynb 22
+# %% ../nbs/routes.ipynb 24
 @settings_ar
 async def plugin_save(
     request,  # FastHTML request object
@@ -292,7 +301,7 @@ async def plugin_save(
     else:
         return create_error_alert("Failed to save configuration")
 
-# %% ../nbs/routes.ipynb 23
+# %% ../nbs/routes.ipynb 25
 @settings_ar
 def plugin(
     request,  # FastHTML request object
