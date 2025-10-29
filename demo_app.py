@@ -21,7 +21,9 @@ print("="*70)
 from cjm_fasthtml_settings.core.schemas import registry
 from cjm_fasthtml_settings.core.schema_group import SchemaGroup
 from cjm_fasthtml_settings.core.config import get_app_config_schema
-from cjm_fasthtml_settings.plugins import PluginMetadata, SimplePluginRegistry
+from cjm_fasthtml_plugins.core.metadata import PluginMetadata
+from cjm_fasthtml_plugins.core.registry import UnifiedPluginRegistry
+from dataclasses import dataclass
 
 # Register the default app config schema
 print("\n[1/5] Registering application configuration schema...")
@@ -229,133 +231,169 @@ print("  ✓ API group registered (2 sub-schemas)")
 
 # Test Feature 3: Plugin integration
 print("\n[4/5] Setting up plugin system...")
-plugin_registry = SimplePluginRegistry(config_dir=Path("demo_configs"))
 
-# Register plugins in different categories
-plugin_registry.register_plugin(PluginMetadata(
-    name="csv_exporter",
+# Create a simple plugin manager for demo purposes
+@dataclass
+class DemoPluginData:
+    """Simple plugin data holder for demo."""
+    name: str
+    version: str
+    title: str
+    description: str
+    config_schema: dict
+
+class DemoPluginManager:
+    """Simple plugin manager for demonstration."""
+
+    def __init__(self, plugins: list[DemoPluginData]):
+        self._plugins = {p.name: p for p in plugins}
+
+    def discover_plugins(self) -> list[DemoPluginData]:
+        """Return all registered plugins."""
+        return list(self._plugins.values())
+
+    def get_plugin_config_schema(self, name: str) -> dict:
+        """Get config schema for a plugin."""
+        plugin = self._plugins.get(name)
+        return plugin.config_schema if plugin else {}
+
+# Define demo plugins
+export_plugins = [
+    DemoPluginData(
+        name="csv_exporter",
+        version="1.0.0",
+        title="CSV Exporter",
+        description="Export data to CSV format",
+        config_schema={
+            "type": "object",
+            "title": "CSV Export Settings",
+            "properties": {
+                "delimiter": {
+                    "type": "string",
+                    "title": "Delimiter",
+                    "description": "Character to separate fields",
+                    "default": ",",
+                    "enum": [",", ";", "\t", "|"],
+                    "enumNames": ["Comma (,)", "Semicolon (;)", "Tab", "Pipe (|)"]
+                },
+                "include_headers": {
+                    "type": "boolean",
+                    "title": "Include Headers",
+                    "default": True
+                },
+                "quote_all_fields": {
+                    "type": "boolean",
+                    "title": "Quote All Fields",
+                    "default": False
+                }
+            }
+        }
+    ),
+    DemoPluginData(
+        name="json_exporter",
+        version="1.0.0",
+        title="JSON Exporter",
+        description="Export data to JSON format",
+        config_schema={
+            "type": "object",
+            "title": "JSON Export Settings",
+            "properties": {
+                "indent": {
+                    "type": "integer",
+                    "title": "Indentation",
+                    "description": "Number of spaces for indentation",
+                    "default": 2,
+                    "minimum": 0,
+                    "maximum": 8
+                },
+                "compact": {
+                    "type": "boolean",
+                    "title": "Compact Output",
+                    "description": "Remove whitespace for smaller files",
+                    "default": False
+                }
+            }
+        }
+    )
+]
+
+processing_plugins = [
+    DemoPluginData(
+        name="data_validator",
+        version="1.2.0",
+        title="Data Validator",
+        description="Validate data quality",
+        config_schema={
+            "type": "object",
+            "title": "Validation Settings",
+            "properties": {
+                "strict_mode": {
+                    "type": "boolean",
+                    "title": "Strict Mode",
+                    "description": "Fail on any validation error",
+                    "default": False
+                },
+                "max_errors": {
+                    "type": "integer",
+                    "title": "Maximum Errors",
+                    "description": "Stop after this many errors (0 = unlimited)",
+                    "default": 100,
+                    "minimum": 0
+                },
+                "check_duplicates": {
+                    "type": "boolean",
+                    "title": "Check for Duplicates",
+                    "default": True
+                }
+            }
+        }
+    ),
+    DemoPluginData(
+        name="data_cleaner",
+        version="2.0.1",
+        title="Data Cleaner",
+        description="Clean and normalize data",
+        config_schema={
+            "type": "object",
+            "title": "Cleaning Settings",
+            "properties": {
+                "remove_nulls": {
+                    "type": "boolean",
+                    "title": "Remove Null Values",
+                    "default": True
+                },
+                "trim_whitespace": {
+                    "type": "boolean",
+                    "title": "Trim Whitespace",
+                    "default": True
+                },
+                "normalize_case": {
+                    "type": "string",
+                    "title": "Normalize Text Case",
+                    "default": "none",
+                    "enum": ["none", "lower", "upper", "title"],
+                    "enumNames": ["No Change", "Lowercase", "UPPERCASE", "Title Case"]
+                }
+            }
+        }
+    )
+]
+
+# Create unified registry and register plugin managers
+plugin_registry = UnifiedPluginRegistry(config_dir=Path("demo_configs"))
+plugin_registry.register_plugin_manager(
     category="export",
-    title="CSV Exporter",
-    description="Export data to CSV format",
-    version="1.0.0",
-    config_schema={
-        "type": "object",
-        "title": "CSV Export Settings",
-        "properties": {
-            "delimiter": {
-                "type": "string",
-                "title": "Delimiter",
-                "description": "Character to separate fields",
-                "default": ",",
-                "enum": [",", ";", "\t", "|"],
-                "enumNames": ["Comma (,)", "Semicolon (;)", "Tab", "Pipe (|)"]
-            },
-            "include_headers": {
-                "type": "boolean",
-                "title": "Include Headers",
-                "default": True
-            },
-            "quote_all_fields": {
-                "type": "boolean",
-                "title": "Quote All Fields",
-                "default": False
-            }
-        }
-    }
-))
-
-plugin_registry.register_plugin(PluginMetadata(
-    name="json_exporter",
-    category="export",
-    title="JSON Exporter",
-    description="Export data to JSON format",
-    version="1.0.0",
-    config_schema={
-        "type": "object",
-        "title": "JSON Export Settings",
-        "properties": {
-            "indent": {
-                "type": "integer",
-                "title": "Indentation",
-                "description": "Number of spaces for indentation",
-                "default": 2,
-                "minimum": 0,
-                "maximum": 8
-            },
-            "compact": {
-                "type": "boolean",
-                "title": "Compact Output",
-                "description": "Remove whitespace for smaller files",
-                "default": False
-            }
-        }
-    }
-))
-
-plugin_registry.register_plugin(PluginMetadata(
-    name="data_validator",
+    manager=DemoPluginManager(export_plugins),
+    display_name="Export Tools"
+)
+plugin_registry.register_plugin_manager(
     category="processing",
-    title="Data Validator",
-    description="Validate data quality",
-    version="1.2.0",
-    config_schema={
-        "type": "object",
-        "title": "Validation Settings",
-        "properties": {
-            "strict_mode": {
-                "type": "boolean",
-                "title": "Strict Mode",
-                "description": "Fail on any validation error",
-                "default": False
-            },
-            "max_errors": {
-                "type": "integer",
-                "title": "Maximum Errors",
-                "description": "Stop after this many errors (0 = unlimited)",
-                "default": 100,
-                "minimum": 0
-            },
-            "check_duplicates": {
-                "type": "boolean",
-                "title": "Check for Duplicates",
-                "default": True
-            }
-        }
-    }
-))
+    manager=DemoPluginManager(processing_plugins),
+    display_name="Data Processing"
+)
 
-plugin_registry.register_plugin(PluginMetadata(
-    name="data_cleaner",
-    category="processing",
-    title="Data Cleaner",
-    description="Clean and normalize data",
-    version="2.0.1",
-    config_schema={
-        "type": "object",
-        "title": "Cleaning Settings",
-        "properties": {
-            "remove_nulls": {
-                "type": "boolean",
-                "title": "Remove Null Values",
-                "default": True
-            },
-            "trim_whitespace": {
-                "type": "boolean",
-                "title": "Trim Whitespace",
-                "default": True
-            },
-            "normalize_case": {
-                "type": "string",
-                "title": "Normalize Text Case",
-                "default": "none",
-                "enum": ["none", "lower", "upper", "title"],
-                "enumNames": ["No Change", "Lowercase", "UPPERCASE", "Title Case"]
-            }
-        }
-    }
-))
-
-print(f"  ✓ Registered {len(plugin_registry._plugins)} plugins")
+total_plugins = sum(len(plugin_registry.get_plugins_by_category(cat)) for cat in plugin_registry.get_categories())
+print(f"  ✓ Registered {total_plugins} plugins")
 print(f"  ✓ Categories: {', '.join(plugin_registry.get_categories_with_plugins())}")
 
 # Step 2: Configure routes behavior
@@ -369,142 +407,134 @@ print("  ✓ Routes configured with plugin support")
 # Step 3: Import the router (AFTER registering schemas and configuring)
 from cjm_fasthtml_settings.routes import settings_ar
 
+# Import styling utilities at module level
+from cjm_fasthtml_tailwind.utilities.spacing import p, m
+from cjm_fasthtml_tailwind.utilities.sizing import container, max_w
+from cjm_fasthtml_tailwind.utilities.typography import font_size, font_weight, text_align
+from cjm_fasthtml_tailwind.core.base import combine_classes
+from cjm_fasthtml_daisyui.components.actions.button import btn, btn_colors, btn_sizes
+from cjm_fasthtml_daisyui.components.data_display.badge import badge, badge_colors
 
-def main():
-    """Main entry point - initializes and starts the server."""
+# Create the FastHTML app at module level
+app, rt = fast_app(
+    pico=False,
+    hdrs=[
+        *get_daisyui_headers(),
+        create_theme_persistence_script(),
+    ],
+    title="FastHTML Settings Demo",
+    htmlkw={'data-theme': 'light'}
+)
 
-    # Create the FastHTML app
-    app, rt = fast_app(
-        pico=False,
-        hdrs=[
-            *get_daisyui_headers(),
-            create_theme_persistence_script(),
-        ],
-        title="FastHTML Settings Demo",
-        htmlkw={'data-theme': 'light'}
-    )
+# Attach the settings router
+settings_ar.to_app(app)
 
-    # Enhanced homepage
-    @rt("/")
-    def get():
-        """Homepage with feature showcase."""
-        from cjm_fasthtml_tailwind.utilities.spacing import p, m
-        from cjm_fasthtml_tailwind.utilities.sizing import container, max_w
-        from cjm_fasthtml_tailwind.utilities.typography import font_size, font_weight, text_align
-        from cjm_fasthtml_tailwind.core.base import combine_classes
-        from cjm_fasthtml_daisyui.components.actions.button import btn, btn_colors, btn_sizes
-        from cjm_fasthtml_daisyui.components.data_display.badge import badge, badge_colors
+# Define main route at module level
+@rt
+def index():
+    """Homepage with feature showcase."""
+    return Main(
+        Div(
+            H1("cjm-fasthtml-settings Demo",
+               cls=combine_classes(font_size._4xl, font_weight.bold, m.b(4))),
 
-        return Main(
+            P("Comprehensive demonstration of all library features:",
+              cls=combine_classes(font_size.lg, m.b(6))),
+
+            # Feature list
             Div(
-                H1("cjm-fasthtml-settings Demo",
-                   cls=combine_classes(font_size._4xl, font_weight.bold, m.b(4))),
-
-                P("Comprehensive demonstration of all library features:",
-                  cls=combine_classes(font_size.lg, m.b(6))),
-
-                # Feature list
                 Div(
-                    Div(
-                        Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
-                        Span("Basic schema registration and configuration forms"),
-                        cls=combine_classes(m.b(3))
-                    ),
-                    Div(
-                        Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
-                        Span("SchemaGroups with collapsible sidebar sections"),
-                        cls=combine_classes(m.b(3))
-                    ),
-                    Div(
-                        Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
-                        Span("Plugin integration with multiple categories"),
-                        cls=combine_classes(m.b(3))
-                    ),
-                    Div(
-                        Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
-                        Span("Configuration persistence (auto-saved to JSON)"),
-                        cls=combine_classes(m.b(3))
-                    ),
-                    Div(
-                        Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
-                        Span("Theme integration with DaisyUI"),
-                        cls=combine_classes(m.b(8))
-                    ),
-                    cls=combine_classes(text_align.left, m.b(8))
+                    Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
+                    Span("Basic schema registration and configuration forms"),
+                    cls=combine_classes(m.b(3))
                 ),
-
-                # Statistics badges
                 Div(
-                    Span(
-                        Span(f"{len(registry.list_schemas())}", cls=str(font_weight.bold)),
-                        " Schema Groups",
-                        cls=combine_classes(badge, badge_colors.info, m.r(2))
-                    ),
-                    Span(
-                        Span(f"{len(plugin_registry._plugins)}", cls=str(font_weight.bold)),
-                        " Plugins",
-                        cls=combine_classes(badge, badge_colors.success, m.r(2))
-                    ),
-                    Span(
-                        Span(f"{len(plugin_registry.get_categories_with_plugins())}", cls=str(font_weight.bold)),
-                        " Plugin Categories",
-                        cls=combine_classes(badge, badge_colors.warning)
-                    ),
+                    Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
+                    Span("SchemaGroups with collapsible sidebar sections"),
+                    cls=combine_classes(m.b(3))
+                ),
+                Div(
+                    Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
+                    Span("Plugin integration with multiple categories"),
+                    cls=combine_classes(m.b(3))
+                ),
+                Div(
+                    Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
+                    Span("Configuration persistence (auto-saved to JSON)"),
+                    cls=combine_classes(m.b(3))
+                ),
+                Div(
+                    Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
+                    Span("Theme integration with DaisyUI"),
                     cls=combine_classes(m.b(8))
                 ),
+                cls=combine_classes(text_align.left, m.b(8))
+            ),
 
-                A(
-                    "Open Settings Interface",
-                    href="/settings",
-                    cls=combine_classes(btn, btn_colors.primary, btn_sizes.lg)
+            # Statistics badges
+            Div(
+                Span(
+                    Span(f"{len(registry.list_schemas())}", cls=str(font_weight.bold)),
+                    " Schema Groups",
+                    cls=combine_classes(badge, badge_colors.info, m.r(2))
                 ),
+                Span(
+                    Span(f"{sum(len(plugin_registry.get_plugins_by_category(cat)) for cat in plugin_registry.get_categories())}", cls=str(font_weight.bold)),
+                    " Plugins",
+                    cls=combine_classes(badge, badge_colors.success, m.r(2))
+                ),
+                Span(
+                    Span(f"{len(plugin_registry.get_categories_with_plugins())}", cls=str(font_weight.bold)),
+                    " Plugin Categories",
+                    cls=combine_classes(badge, badge_colors.warning)
+                ),
+                cls=combine_classes(m.b(8))
+            ),
 
-                cls=combine_classes(
-                    container,
-                    max_w._4xl,
-                    m.x.auto,
-                    p(8),
-                    text_align.center
-                )
+            A(
+                "Open Settings Interface",
+                href=settings_ar.index.to(),
+                cls=combine_classes(btn, btn_colors.primary, btn_sizes.lg)
+            ),
+
+            cls=combine_classes(
+                container,
+                max_w._4xl,
+                m.x.auto,
+                p(8),
+                text_align.center
             )
         )
+    )
 
-    # Attach the settings router
-    settings_ar.to_app(app)
+print("\n" + "="*70)
+print("Demo App Ready!")
+print("="*70)
+print("\n📋 Registered Settings:")
+for schema_name in registry.list_schemas():
+    item = registry.get(schema_name)
+    if isinstance(item, SchemaGroup):
+        print(f"\n  📁 {item.title} (Group)")
+        for sub_key in item.schemas:
+            print(f"     └─ {item.schemas[sub_key]['title']}")
+    else:
+        print(f"  📄 {item.get('title')}")
 
-    print("\n" + "="*70)
-    print("Demo App Ready!")
-    print("="*70)
-    print("\n📋 Registered Settings:")
-    for schema_name in registry.list_schemas():
-        item = registry.get(schema_name)
-        if isinstance(item, SchemaGroup):
-            print(f"\n  📁 {item.title} (Group)")
-            for sub_key in item.schemas:
-                print(f"     └─ {item.schemas[sub_key]['title']}")
-        else:
-            print(f"  📄 {item.get('title')}")
+if config.plugin_registry:
+    print("\n🔌 Registered Plugins:")
+    for category in plugin_registry.get_categories_with_plugins():
+        print(f"\n  Category: {category.title()}")
+        for plugin in plugin_registry.get_plugins_by_category(category):
+            print(f"    • {plugin.title} (v{plugin.version if plugin.version else '1.0'})")
 
-    if config.plugin_registry:
-        print("\n🔌 Registered Plugins:")
-        for category in plugin_registry.get_categories_with_plugins():
-            print(f"\n  Category: {category.title()}")
-            for plugin in plugin_registry.get_plugins_by_category(category):
-                print(f"    • {plugin.title} (v{plugin.version if plugin.version else '1.0'})")
-
-    print(f"\n💾 Config directory: {config.config_dir}")
-    print("="*70 + "\n")
-
-    return app
+print(f"\n💾 Config directory: {config.config_dir}")
+print("="*70 + "\n")
 
 
 if __name__ == "__main__":
     import uvicorn
     import webbrowser
     import threading
-
-    # Call main to initialize everything and get the app
-    app = main()
 
     def open_browser(url):
         print(f"🌐 Opening browser at {url}")
@@ -516,8 +546,8 @@ if __name__ == "__main__":
 
     print(f"🚀 Server: http://{display_host}:{port}")
     print("\n📍 Available routes:")
-    print(f"  http://{display_host}:{port}/          - Homepage with feature list")
-    print(f"  http://{display_host}:{port}/settings  - Settings interface")
+    print(f"  http://{display_host}:{port}/                  - Homepage with feature list")
+    print(f"  http://{display_host}:{port}/settings/index    - Settings interface")
     print("\n" + "="*70 + "\n")
 
     # Open browser after a short delay
