@@ -42,29 +42,29 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> components_sidebar
-    components_dashboard --> components_forms
     components_dashboard --> core_utils
+    components_dashboard --> components_sidebar
     components_dashboard --> core_config
+    components_dashboard --> components_forms
     components_dashboard --> core_html_ids
     components_forms --> core_utils
     components_forms --> core_config
     components_forms --> core_html_ids
+    components_sidebar --> core_schemas
     components_sidebar --> core_config
     components_sidebar --> core_html_ids
-    components_sidebar --> core_schemas
-    core_schemas --> core_schemas
     core_schemas --> core_schema_group
     core_schemas --> core_config
+    core_schemas --> core_schemas
     core_utils --> core_config
-    routes --> core_utils
-    routes --> components_sidebar
     routes --> components_dashboard
-    routes --> core_config
+    routes --> core_utils
     routes --> routes
-    routes --> core_schemas
+    routes --> components_sidebar
+    routes --> core_config
     routes --> components_forms
     routes --> core_html_ids
+    routes --> core_schemas
 ```
 
 *23 cross-module dependencies detected*
@@ -292,7 +292,7 @@ from cjm_fasthtml_settings.routes import (
 
 #### Functions
 
-```` python
+``` python
 def configure_settings(
     config_dir: Path = None,  # Directory for storing configuration files
     wrap_with_layout: Callable = None,  # Function to wrap full page content with app layout
@@ -300,30 +300,8 @@ def configure_settings(
     default_schema: str = "general",  # Default schema to display
     menu_section_title: str = "Settings"  # Title for the settings menu section
 ) -> RoutesConfig:  # Configured RoutesConfig instance
-    """
-    Configure the settings system with a single function call.
-    
-    This is a convenience function that sets all configuration options at once,
-    providing a cleaner alternative to setting config attributes individually.
-    
-    Example:
-        ```python
-        from cjm_fasthtml_settings.routes import configure_settings, settings_ar
-        from pathlib import Path
-        
-        configure_settings(
-            config_dir=Path("my_configs"),
-            wrap_with_layout=my_layout_function,
-            plugin_registry=my_plugin_registry,
-            default_schema="general",
-            menu_section_title="App Settings"
-        )
-        
-        # Now add the router to your app
-        settings_ar.to_app(app)
-        ```
-    """
-````
+    "Configure the settings system with a single function call."
+```
 
 ``` python
 def _resolve_schema(

@@ -48,7 +48,7 @@ class RoutesConfig:
 # Module-level config instance
 config = RoutesConfig()
 
-# %% ../nbs/routes.ipynb 8
+# %% ../nbs/routes.ipynb 9
 def configure_settings(
     config_dir: Path = None,  # Directory for storing configuration files
     wrap_with_layout: Callable = None,  # Function to wrap full page content with app layout
@@ -56,29 +56,7 @@ def configure_settings(
     default_schema: str = "general",  # Default schema to display
     menu_section_title: str = "Settings"  # Title for the settings menu section
 ) -> RoutesConfig:  # Configured RoutesConfig instance
-    """
-    Configure the settings system with a single function call.
-    
-    This is a convenience function that sets all configuration options at once,
-    providing a cleaner alternative to setting config attributes individually.
-    
-    Example:
-        ```python
-        from cjm_fasthtml_settings.routes import configure_settings, settings_ar
-        from pathlib import Path
-        
-        configure_settings(
-            config_dir=Path("my_configs"),
-            wrap_with_layout=my_layout_function,
-            plugin_registry=my_plugin_registry,
-            default_schema="general",
-            menu_section_title="App Settings"
-        )
-        
-        # Now add the router to your app
-        settings_ar.to_app(app)
-        ```
-    """
+    """Configure the settings system with a single function call."""
     if config_dir is not None:
         config.config_dir = config_dir
     if wrap_with_layout is not None:
@@ -92,14 +70,14 @@ def configure_settings(
     
     return config
 
-# %% ../nbs/routes.ipynb 12
+# %% ../nbs/routes.ipynb 13
 def _resolve_schema(
     id: str  # Schema ID
 ) -> tuple:  # (schema, error_message)
     """Resolve schema from ID using the registry."""
     return registry.resolve_schema(id)
 
-# %% ../nbs/routes.ipynb 13
+# %% ../nbs/routes.ipynb 14
 def _handle_htmx_request(
     request,  # FastHTML request object
     content_fn: Callable,  # Function to generate content
@@ -118,7 +96,7 @@ def _handle_htmx_request(
         return config.wrap_with_layout(content)
     return content
 
-# %% ../nbs/routes.ipynb 14
+# %% ../nbs/routes.ipynb 15
 def _create_settings_response(
     schema: Dict[str, Any],  # Schema dictionary
     values: Dict[str, Any],  # Form values
@@ -145,11 +123,11 @@ def _create_settings_response(
         )
     )
 
-# %% ../nbs/routes.ipynb 17
+# %% ../nbs/routes.ipynb 18
 # Module-level API router
 settings_ar = APIRouter(prefix="/settings")
 
-# %% ../nbs/routes.ipynb 18
+# %% ../nbs/routes.ipynb 19
 @settings_ar
 def index(
     request,  # FastHTML request object
@@ -172,7 +150,7 @@ def index(
         plugin_registry=config.plugin_registry
     )
 
-# %% ../nbs/routes.ipynb 19
+# %% ../nbs/routes.ipynb 20
 @settings_ar
 def load_form(
     id: str = None  # Schema ID to load (defaults to config.default_schema)
@@ -196,7 +174,7 @@ def load_form(
         cls=combine_classes(flex(1), min_h(0))
     )
 
-# %% ../nbs/routes.ipynb 20
+# %% ../nbs/routes.ipynb 21
 @settings_ar
 async def save(
     request,  # FastHTML request object
@@ -223,7 +201,7 @@ async def save(
     else:
         return create_error_alert(f"Failed to save {schema.get('title')} configuration")
 
-# %% ../nbs/routes.ipynb 21
+# %% ../nbs/routes.ipynb 22
 @settings_ar
 def reset(
     id: str  # Schema ID to reset
@@ -245,7 +223,7 @@ def reset(
         sidebar_id=id
     )
 
-# %% ../nbs/routes.ipynb 23
+# %% ../nbs/routes.ipynb 24
 @settings_ar
 def plugin_reset(
     id: str  # Plugin unique ID
@@ -270,7 +248,7 @@ def plugin_reset(
         sidebar_id=id
     )
 
-# %% ../nbs/routes.ipynb 24
+# %% ../nbs/routes.ipynb 25
 @settings_ar
 async def plugin_save(
     request,  # FastHTML request object
@@ -301,7 +279,7 @@ async def plugin_save(
     else:
         return create_error_alert("Failed to save configuration")
 
-# %% ../nbs/routes.ipynb 25
+# %% ../nbs/routes.ipynb 26
 @settings_ar
 def plugin(
     request,  # FastHTML request object
