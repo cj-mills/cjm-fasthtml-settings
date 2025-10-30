@@ -87,7 +87,9 @@ def create_settings_master_detail(
     reset_route_fn: callable,  # Function that returns reset route URL for schema_id
     default_schema: str = "general",  # Default schema to show
     menu_section_title: str = "Settings",  # Title for master list
-    plugin_registry: Optional[Any] = None  # Optional plugin registry
+    plugin_registry: Optional[Any] = None,  # Optional plugin registry
+    plugin_save_route_fn: Optional[callable] = None,  # Function that returns save route URL for plugin_id
+    plugin_reset_route_fn: Optional[callable] = None  # Function that returns reset route URL for plugin_id
 ) -> MasterDetail:  # Configured MasterDetail instance
     """Create a MasterDetail instance configured for settings.
     
@@ -96,8 +98,13 @@ def create_settings_master_detail(
     """
     from cjm_fasthtml_settings.core.schema_group import SchemaGroup
     
-    # Create the settings detail renderer
+    # Create the settings detail renderer for regular schemas
     render_fn = create_settings_detail_renderer(config_dir, save_route_fn, reset_route_fn)
+    
+    # Create a separate renderer for plugins if plugin routes are provided
+    plugin_render_fn = None
+    if plugin_save_route_fn and plugin_reset_route_fn:
+        plugin_render_fn = create_settings_detail_renderer(config_dir, plugin_save_route_fn, plugin_reset_route_fn)
     
     # Convert schemas to DetailItems and DetailItemGroups
     items = []
@@ -155,7 +162,7 @@ def create_settings_master_detail(
             )
     
     # Add plugin items if registry is provided
-    if plugin_registry:
+    if plugin_registry and plugin_render_fn:
         # Get all categories
         categories_with_plugins = plugin_registry.get_categories_with_plugins()
         
@@ -180,7 +187,7 @@ def create_settings_master_detail(
                         DetailItem(
                             id=plugin_id,
                             label=plugin_metadata.title,
-                            render=render_fn,
+                            render=plugin_render_fn,  # Use plugin-specific renderer
                             data_loader=create_settings_data_loader(
                                 plugin_metadata.config_schema,
                                 plugin_id

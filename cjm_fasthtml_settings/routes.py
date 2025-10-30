@@ -156,7 +156,9 @@ def index(
             reset_route_fn=lambda schema_id: reset.to(id=schema_id),
             default_schema=config.default_schema,
             menu_section_title=config.menu_section_title,
-            plugin_registry=config.plugin_registry
+            plugin_registry=config.plugin_registry,
+            plugin_save_route_fn=lambda plugin_id: plugin_save.to(id=plugin_id),
+            plugin_reset_route_fn=lambda plugin_id: plugin_reset.to(id=plugin_id)
         )
         
         # For HTMX requests targeting the detail area specifically, return just the detail content
@@ -313,6 +315,8 @@ def plugin_reset(
     id: str  # Plugin unique ID
 ) -> FT:  # Response with form or error
     """Reset plugin configuration to defaults handler."""
+    from cjm_fasthtml_interactions.core.html_ids import InteractionHtmlIds
+    
     if not config.plugin_registry:
         return create_error_alert("Plugin system not configured")
     
@@ -322,13 +326,26 @@ def plugin_reset(
     
     schema = plugin_metadata.config_schema
     values = get_default_values_from_schema(schema)
+    alert_msg = create_success_alert("Configuration reset to defaults")
     
+    # For MasterDetail pattern, return just the form container with the alert
+    if config.use_master_detail_pattern:
+        return create_settings_form_container(
+            schema=schema,
+            values=values,
+            post_url=plugin_save.to(id=id),
+            reset_url=plugin_reset.to(id=id),
+            alert_message=alert_msg,
+            target_id=InteractionHtmlIds.MASTER_DETAIL_DETAIL
+        )
+    
+    # For legacy pattern, return form with sidebar OOB swap
     return _create_settings_response(
         schema=schema,
         values=values,
         save_url=plugin_save.to(id=id),
         reset_url=plugin_reset.to(id=id),
-        alert_msg=create_success_alert("Configuration reset to defaults"),
+        alert_msg=alert_msg,
         sidebar_id=id
     )
 
@@ -339,6 +356,8 @@ async def plugin_save(
     id: str  # Plugin unique ID
 ) -> FT:  # Response with form or error
     """Save plugin configuration handler."""
+    from cjm_fasthtml_interactions.core.html_ids import InteractionHtmlIds
+    
     if not config.plugin_registry:
         return create_error_alert("Plugin system not configured")
     
@@ -352,12 +371,26 @@ async def plugin_save(
     
     # Save configuration
     if config.plugin_registry.save_plugin_config(id, config_data):
+        alert_msg = create_success_alert(f"Configuration saved for {plugin_metadata.title}")
+        
+        # For MasterDetail pattern, return just the form container with the alert
+        if config.use_master_detail_pattern:
+            return create_settings_form_container(
+                schema=schema,
+                values=config_data,
+                post_url=plugin_save.to(id=id),
+                reset_url=plugin_reset.to(id=id),
+                alert_message=alert_msg,
+                target_id=InteractionHtmlIds.MASTER_DETAIL_DETAIL
+            )
+        
+        # For legacy pattern, return form with sidebar OOB swap
         return _create_settings_response(
             schema=schema,
             values=config_data,
             save_url=plugin_save.to(id=id),
             reset_url=plugin_reset.to(id=id),
-            alert_msg=create_success_alert(f"Configuration saved for {plugin_metadata.title}"),
+            alert_msg=alert_msg,
             sidebar_id=id
         )
     else:

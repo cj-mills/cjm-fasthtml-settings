@@ -44,32 +44,32 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> core_utils
-    components_dashboard --> core_html_ids
-    components_dashboard --> components_sidebar
     components_dashboard --> core_config
+    components_dashboard --> core_html_ids
+    components_dashboard --> core_utils
+    components_dashboard --> components_sidebar
     components_dashboard --> components_forms
+    components_forms --> core_config
     components_forms --> core_html_ids
     components_forms --> core_utils
-    components_forms --> core_config
-    components_master_detail_adapter --> core_utils
     components_master_detail_adapter --> core_schemas
     components_master_detail_adapter --> core_config
+    components_master_detail_adapter --> core_utils
     components_master_detail_adapter --> components_forms
+    components_sidebar --> core_config
     components_sidebar --> core_html_ids
     components_sidebar --> core_schemas
-    components_sidebar --> core_config
-    core_schemas --> core_schema_group
     core_schemas --> core_schemas
+    core_schemas --> core_schema_group
     core_schemas --> core_config
     core_utils --> core_config
-    routes --> core_utils
-    routes --> routes
-    routes --> core_config
-    routes --> core_html_ids
-    routes --> components_dashboard
-    routes --> components_sidebar
     routes --> core_schemas
+    routes --> routes
+    routes --> core_utils
+    routes --> core_config
+    routes --> components_dashboard
+    routes --> core_html_ids
+    routes --> components_sidebar
     routes --> components_forms
 ```
 
@@ -282,7 +282,9 @@ def create_settings_master_detail(
     reset_route_fn: callable,  # Function that returns reset route URL for schema_id
     default_schema: str = "general",  # Default schema to show
     menu_section_title: str = "Settings",  # Title for master list
-    plugin_registry: Optional[Any] = None  # Optional plugin registry
+    plugin_registry: Optional[Any] = None,  # Optional plugin registry
+    plugin_save_route_fn: Optional[callable] = None,  # Function that returns save route URL for plugin_id
+    plugin_reset_route_fn: Optional[callable] = None  # Function that returns reset route URL for plugin_id
 ) -> MasterDetail:  # Configured MasterDetail instance
     """
     Create a MasterDetail instance configured for settings.
