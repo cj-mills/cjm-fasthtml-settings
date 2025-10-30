@@ -12,10 +12,11 @@ pip install cjm_fasthtml_settings
 ## Project Structure
 
     nbs/
-    ├── components/ (3)
-    │   ├── dashboard.ipynb  # Settings dashboard layout components
-    │   ├── forms.ipynb      # Form generation components for settings interfaces
-    │   └── sidebar.ipynb    # Navigation menu components for settings sidebar
+    ├── components/ (4)
+    │   ├── dashboard.ipynb              # Settings dashboard layout components
+    │   ├── forms.ipynb                  # Form generation components for settings interfaces
+    │   ├── master_detail_adapter.ipynb  # Adapter for integrating cjm-fasthtml-interactions MasterDetail pattern into settings
+    │   └── sidebar.ipynb                # Navigation menu components for settings sidebar
     ├── core/ (5)
     │   ├── config.ipynb        # Configuration constants, directory management, and base application schema
     │   ├── html_ids.ipynb      # Centralized HTML ID constants for settings components
@@ -25,7 +26,7 @@ pip install cjm_fasthtml_settings
     ├── plugins.ipynb  # Optional plugin integration for extensible settings systems
     └── routes.ipynb   # FastHTML route handlers for settings interface
 
-Total: 10 notebooks across 2 directories
+Total: 11 notebooks across 2 directories
 
 ## Module Dependencies
 
@@ -33,6 +34,7 @@ Total: 10 notebooks across 2 directories
 graph LR
     components_dashboard[components.dashboard<br/>Dashboard]
     components_forms[components.forms<br/>Forms]
+    components_master_detail_adapter[components.master_detail_adapter<br/>Master-Detail Adapter]
     components_sidebar[components.sidebar<br/>Sidebar]
     core_config[core.config<br/>Config]
     core_html_ids[core.html_ids<br/>HTML IDs]
@@ -42,32 +44,36 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> core_utils
     components_dashboard --> components_sidebar
-    components_dashboard --> core_config
-    components_dashboard --> components_forms
     components_dashboard --> core_html_ids
-    components_forms --> core_utils
-    components_forms --> core_config
+    components_dashboard --> core_config
+    components_dashboard --> core_utils
+    components_dashboard --> components_forms
     components_forms --> core_html_ids
+    components_forms --> core_config
+    components_forms --> core_utils
+    components_master_detail_adapter --> core_schemas
+    components_master_detail_adapter --> core_config
+    components_master_detail_adapter --> core_utils
+    components_master_detail_adapter --> components_forms
+    components_sidebar --> core_html_ids
     components_sidebar --> core_schemas
     components_sidebar --> core_config
-    components_sidebar --> core_html_ids
-    core_schemas --> core_schema_group
     core_schemas --> core_config
     core_schemas --> core_schemas
+    core_schemas --> core_schema_group
     core_utils --> core_config
+    routes --> core_config
+    routes --> components_sidebar
+    routes --> core_html_ids
     routes --> components_dashboard
+    routes --> core_schemas
     routes --> core_utils
     routes --> routes
-    routes --> components_sidebar
-    routes --> core_config
     routes --> components_forms
-    routes --> core_html_ids
-    routes --> core_schemas
 ```
 
-*23 cross-module dependencies detected*
+*27 cross-module dependencies detected*
 
 ## CLI Reference
 
@@ -218,6 +224,72 @@ class SettingsHtmlIds(AppHtmlIds):
         "Generate a menu item ID for a given settings name."
 ```
 
+### Master-Detail Adapter (`master_detail_adapter.ipynb`)
+
+> Adapter for integrating cjm-fasthtml-interactions MasterDetail pattern
+> into settings
+
+#### Import
+
+``` python
+from cjm_fasthtml_settings.components.master_detail_adapter import (
+    create_settings_detail_renderer,
+    create_settings_data_loader,
+    is_schema_configured,
+    create_settings_master_detail
+)
+```
+
+#### Functions
+
+``` python
+def create_settings_detail_renderer(
+    config_dir: Path,  # Configuration directory
+    save_route_fn: callable,  # Function that returns save route URL for schema_id
+    reset_route_fn: callable  # Function that returns reset route URL for schema_id
+) -> callable:  # Render function for detail view
+    """
+    Create a render function for settings detail view.
+    
+    This creates a closure that captures the config_dir and route functions,
+    returning a render function compatible with DetailItem.
+    """
+```
+
+``` python
+def create_settings_data_loader(
+    schema: Dict,  # JSON schema
+    schema_id: str  # Schema identifier
+) -> callable:  # Data loader function
+    "Create a data loader that provides schema information."
+```
+
+``` python
+def is_schema_configured(
+    schema_id: str,  # Schema identifier
+    config_dir: Path  # Configuration directory
+) -> bool:  # True if config file exists
+    "Check if a schema has been configured."
+```
+
+``` python
+def create_settings_master_detail(
+    schemas: Dict,  # All registered schemas (from registry.get_all())
+    config_dir: Path,  # Configuration directory
+    save_route_fn: callable,  # Function that returns save route URL for schema_id
+    reset_route_fn: callable,  # Function that returns reset route URL for schema_id
+    default_schema: str = "general",  # Default schema to show
+    menu_section_title: str = "Settings",  # Title for master list
+    plugin_registry: Optional[Any] = None  # Optional plugin registry
+) -> MasterDetail:  # Configured MasterDetail instance
+    """
+    Create a MasterDetail instance configured for settings.
+    
+    This adapter function transforms the settings schema structure into
+    DetailItem and DetailItemGroup objects compatible with MasterDetail.
+    """
+```
+
 ### Plugins (`plugins.ipynb`)
 
 > Optional plugin integration for extensible settings systems
@@ -298,7 +370,8 @@ def configure_settings(
     wrap_with_layout: Callable = None,  # Function to wrap full page content with app layout
     plugin_registry = None,  # Optional plugin registry (must implement PluginRegistryProtocol)
     default_schema: str = "general",  # Default schema to display
-    menu_section_title: str = "Settings"  # Title for the settings menu section
+    menu_section_title: str = "Settings",  # Title for the settings menu section
+    use_master_detail_pattern: bool = False  # Use MasterDetail pattern from cjm-fasthtml-interactions
 ) -> RoutesConfig:  # Configured RoutesConfig instance
     "Configure the settings system with a single function call."
 ```

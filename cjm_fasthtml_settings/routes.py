@@ -44,6 +44,7 @@ class RoutesConfig:
     menu_section_title: str = "Settings"
     wrap_with_layout: Optional[Callable] = None  # Optional function to wrap full page content
     plugin_registry: Optional[Any] = None  # Optional plugin registry (must implement PluginRegistryProtocol)
+    use_master_detail_pattern: bool = False  # Use MasterDetail pattern from cjm-fasthtml-interactions
 
 # Module-level config instance
 config = RoutesConfig()
@@ -54,7 +55,8 @@ def configure_settings(
     wrap_with_layout: Callable = None,  # Function to wrap full page content with app layout
     plugin_registry = None,  # Optional plugin registry (must implement PluginRegistryProtocol)
     default_schema: str = "general",  # Default schema to display
-    menu_section_title: str = "Settings"  # Title for the settings menu section
+    menu_section_title: str = "Settings",  # Title for the settings menu section
+    use_master_detail_pattern: bool = False  # Use MasterDetail pattern from cjm-fasthtml-interactions
 ) -> RoutesConfig:  # Configured RoutesConfig instance
     """Configure the settings system with a single function call."""
     if config_dir is not None:
@@ -67,6 +69,7 @@ def configure_settings(
         config.default_schema = default_schema
     if menu_section_title is not None:
         config.menu_section_title = menu_section_title
+    config.use_master_detail_pattern = use_master_detail_pattern
     
     return config
 
@@ -139,6 +142,52 @@ def index(
         
     schema, _ = _resolve_schema(id)
     
+    # Use MasterDetail pattern if enabled
+    if config.use_master_detail_pattern:
+        from cjm_fasthtml_settings.components.master_detail_adapter import create_settings_master_detail
+        from cjm_fasthtml_app_core.core.htmx import is_htmx_request
+        
+        # Create the master-detail instance
+        settings_md = create_settings_master_detail(
+            schemas=registry.get_all(),
+            config_dir=config.config_dir,
+            save_route_fn=lambda schema_id: save.to(id=schema_id),
+            reset_route_fn=lambda schema_id: reset.to(id=schema_id),
+            default_schema=config.default_schema,
+            menu_section_title=config.menu_section_title,
+            plugin_registry=config.plugin_registry
+        )
+        
+        # For HTMX requests to the detail area, return just the detail content
+        if is_htmx_request(request):
+            item = settings_md.get_item(id)
+            if item:
+                ctx = settings_md.create_context(request, request.session, item)
+                content = settings_md.render_detail(item, ctx)
+                
+                # Add OOB sidebar update
+                from cjm_fasthtml_interactions.core.html_ids import InteractionHtmlIds
+                master_oob = settings_md.render_master_oob(
+                    active_item_id=id,
+                    item_route_func=lambda iid: index.to(id=iid)
+                )
+                
+                return Div(content, master_oob)
+        
+        # For full page requests, render the complete interface
+        full_interface = settings_md.render_full_interface(
+            active_item_id=id,
+            item_route_func=lambda iid: index.to(id=iid),
+            request=request,
+            sess=request.session
+        )
+        
+        # Wrap with layout if provided
+        if config.wrap_with_layout:
+            return config.wrap_with_layout(full_interface)
+        return full_interface
+    
+    # Use legacy implementation
     return _handle_htmx_request(
         request,
         settings_content,
