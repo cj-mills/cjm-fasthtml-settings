@@ -233,6 +233,9 @@ async def save(
     id: str  # Schema ID to save
 ) -> FT:  # Response with form or error
     """Save configuration handler."""
+    from cjm_fasthtml_interactions.core.html_ids import InteractionHtmlIds
+    from cjm_fasthtml_settings.core.utils import load_config
+    
     schema, error_msg = _resolve_schema(id)
     if error_msg:
         return create_error_alert(error_msg)
@@ -242,12 +245,26 @@ async def save(
     
     # Save configuration
     if save_config(id, config_data, config.config_dir):
+        alert_msg = create_success_alert(f"Configuration saved for {schema.get('title')}")
+        
+        # For MasterDetail pattern, return just the form container with the alert
+        if config.use_master_detail_pattern:
+            return create_settings_form_container(
+                schema=schema,
+                values=config_data,
+                post_url=save.to(id=id),
+                reset_url=reset.to(id=id),
+                alert_message=alert_msg,
+                target_id=InteractionHtmlIds.MASTER_DETAIL_DETAIL
+            )
+        
+        # For legacy pattern, return form with sidebar OOB swap
         return _create_settings_response(
             schema=schema,
             values=config_data,
             save_url=save.to(id=id),
             reset_url=reset.to(id=id),
-            alert_msg=create_success_alert(f"Configuration saved for {schema.get('title')}"),
+            alert_msg=alert_msg,
             sidebar_id=id
         )
     else:
@@ -259,19 +276,34 @@ def reset(
     id: str  # Schema ID to reset
 ) -> FT:  # Response with form or error
     """Reset configuration to defaults handler."""
+    from cjm_fasthtml_interactions.core.html_ids import InteractionHtmlIds
+    
     schema, error_msg = _resolve_schema(id)
     if error_msg:
         return create_error_alert(error_msg)
     
     # Use only default values
     values = get_default_values_from_schema(schema)
+    alert_msg = create_success_alert("Configuration reset to defaults")
     
+    # For MasterDetail pattern, return just the form container with the alert
+    if config.use_master_detail_pattern:
+        return create_settings_form_container(
+            schema=schema,
+            values=values,
+            post_url=save.to(id=id),
+            reset_url=reset.to(id=id),
+            alert_message=alert_msg,
+            target_id=InteractionHtmlIds.MASTER_DETAIL_DETAIL
+        )
+    
+    # For legacy pattern, return form with sidebar OOB swap
     return _create_settings_response(
         schema=schema,
         values=values,
         save_url=save.to(id=id),
         reset_url=reset.to(id=id),
-        alert_msg=create_success_alert("Configuration reset to defaults"),
+        alert_msg=alert_msg,
         sidebar_id=id
     )
 

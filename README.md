@@ -44,32 +44,32 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> core_utils
     components_dashboard --> components_sidebar
-    components_dashboard --> core_config
     components_dashboard --> core_html_ids
+    components_dashboard --> core_config
+    components_dashboard --> core_utils
     components_dashboard --> components_forms
-    components_forms --> core_config
     components_forms --> core_html_ids
+    components_forms --> core_config
     components_forms --> core_utils
-    components_master_detail_adapter --> core_utils
-    components_master_detail_adapter --> core_schemas
     components_master_detail_adapter --> core_config
+    components_master_detail_adapter --> core_schemas
+    components_master_detail_adapter --> core_utils
     components_master_detail_adapter --> components_forms
-    components_sidebar --> core_config
-    components_sidebar --> core_html_ids
     components_sidebar --> core_schemas
-    core_schemas --> core_schema_group
+    components_sidebar --> core_html_ids
+    components_sidebar --> core_config
     core_schemas --> core_schemas
+    core_schemas --> core_schema_group
     core_schemas --> core_config
     core_utils --> core_config
-    routes --> routes
-    routes --> components_dashboard
-    routes --> components_sidebar
-    routes --> core_schemas
     routes --> core_config
-    routes --> core_html_ids
     routes --> core_utils
+    routes --> routes
+    routes --> components_sidebar
+    routes --> components_dashboard
+    routes --> core_html_ids
+    routes --> core_schemas
     routes --> components_forms
 ```
 
@@ -183,7 +183,8 @@ def create_settings_form(
     schema: Dict[str, Any],  # JSON schema for the form
     values: Dict[str, Any],  # Current values for the form fields
     post_url: str,  # URL for form submission
-    reset_url: str  # URL for resetting form to defaults
+    reset_url: str,  # URL for resetting form to defaults
+    target_id: str = None  # HTML ID of target container (defaults to SETTINGS_CONTENT)
 ) -> FT:  # Form element with settings and action buttons
     "Create a settings form with action buttons."
 ```
@@ -195,7 +196,8 @@ def create_settings_form_container(
     post_url: str,  # URL for form submission
     reset_url: str,  # URL for resetting form to defaults
     alert_message: Optional[Any] = None,  # Optional alert element to display
-    use_alert_container: bool = False  # If True, add empty alert-container div
+    use_alert_container: bool = False,  # If True, add empty alert-container div
+    target_id: str = None  # HTML ID of target container (defaults to SETTINGS_CONTENT)
 ) -> FT:  # Div containing the alert (if any) and the settings form
     "Create a container with optional alert and settings form."
 ```

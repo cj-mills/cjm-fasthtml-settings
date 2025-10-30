@@ -34,6 +34,8 @@ def create_settings_detail_renderer(
     """
     def render_settings_detail(ctx: InteractionContext):
         """Render settings form for a schema."""
+        from cjm_fasthtml_interactions.core.html_ids import InteractionHtmlIds
+        
         schema = ctx.get_data("schema", {})
         schema_id = ctx.get_data("schema_id", "")
         
@@ -47,7 +49,8 @@ def create_settings_detail_renderer(
             values=values,
             post_url=save_route_fn(schema_id),
             reset_url=reset_route_fn(schema_id),
-            use_alert_container=True
+            use_alert_container=True,
+            target_id=InteractionHtmlIds.MASTER_DETAIL_DETAIL  # Target the master-detail detail area
         )
     
     return render_settings_detail

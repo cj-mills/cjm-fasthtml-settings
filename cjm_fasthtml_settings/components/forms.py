@@ -25,9 +25,14 @@ def create_settings_form(
     schema: Dict[str, Any],  # JSON schema for the form
     values: Dict[str, Any],  # Current values for the form fields
     post_url: str,  # URL for form submission
-    reset_url: str  # URL for resetting form to defaults
+    reset_url: str,  # URL for resetting form to defaults
+    target_id: str = None  # HTML ID of target container (defaults to SETTINGS_CONTENT)
 ) -> FT:  # Form element with settings and action buttons
     """Create a settings form with action buttons."""
+
+    # Use provided target_id or default to SETTINGS_CONTENT
+    if target_id is None:
+        target_id = HtmlIds.SETTINGS_CONTENT
 
     # Build button attributes for Save button
     save_button_attrs = {
@@ -43,7 +48,7 @@ def create_settings_form(
     reset_button_attrs = {
         "type": "button",
         "hx_get": reset_url,
-        "hx_target": HtmlIds.as_selector(HtmlIds.SETTINGS_CONTENT),
+        "hx_target": HtmlIds.as_selector(target_id),
         "hx_swap": "innerHTML",
         "cls": combine_classes(btn, btn_styles.ghost, m.l(2))
     }
@@ -81,7 +86,7 @@ def create_settings_form(
 
         # Form submission
         hx_post=post_url,
-        hx_target=HtmlIds.as_selector(HtmlIds.SETTINGS_CONTENT),
+        hx_target=HtmlIds.as_selector(target_id),
         hx_swap="innerHTML"
     )
 
@@ -92,7 +97,8 @@ def create_settings_form_container(
     post_url: str,  # URL for form submission
     reset_url: str,  # URL for resetting form to defaults
     alert_message: Optional[Any] = None,  # Optional alert element to display
-    use_alert_container: bool = False  # If True, add empty alert-container div
+    use_alert_container: bool = False,  # If True, add empty alert-container div
+    target_id: str = None  # HTML ID of target container (defaults to SETTINGS_CONTENT)
 ) -> FT:  # Div containing the alert (if any) and the settings form
     """Create a container with optional alert and settings form."""
     children = []
@@ -109,7 +115,8 @@ def create_settings_form_container(
             schema=schema,
             values=values,
             post_url=post_url,
-            reset_url=reset_url
+            reset_url=reset_url,
+            target_id=target_id
         )
     )
 
