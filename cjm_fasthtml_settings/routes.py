@@ -146,6 +146,7 @@ def index(
     if config.use_master_detail_pattern:
         from cjm_fasthtml_settings.components.master_detail_adapter import create_settings_master_detail
         from cjm_fasthtml_app_core.core.htmx import is_htmx_request
+        from cjm_fasthtml_interactions.core.html_ids import InteractionHtmlIds
         
         # Create the master-detail instance
         settings_md = create_settings_master_detail(
@@ -158,15 +159,16 @@ def index(
             plugin_registry=config.plugin_registry
         )
         
-        # For HTMX requests to the detail area, return just the detail content
-        if is_htmx_request(request):
+        # For HTMX requests targeting the detail area specifically, return just the detail content
+        # This happens when clicking between settings items within the interface
+        hx_target = request.headers.get('HX-Target')
+        if is_htmx_request(request) and hx_target == InteractionHtmlIds.MASTER_DETAIL_DETAIL:
             item = settings_md.get_item(id)
             if item:
                 ctx = settings_md.create_context(request, request.session, item)
                 content = settings_md.render_detail(item, ctx)
                 
                 # Add OOB sidebar update
-                from cjm_fasthtml_interactions.core.html_ids import InteractionHtmlIds
                 master_oob = settings_md.render_master_oob(
                     active_item_id=id,
                     item_route_func=lambda iid: index.to(id=iid)
@@ -174,7 +176,8 @@ def index(
                 
                 return Div(content, master_oob)
         
-        # For full page requests, render the complete interface
+        # For full page requests or HTMX requests from outside (e.g., navbar),
+        # render the complete interface
         full_interface = settings_md.render_full_interface(
             active_item_id=id,
             item_route_func=lambda iid: index.to(id=iid),
@@ -182,8 +185,8 @@ def index(
             sess=request.session
         )
         
-        # Wrap with layout if provided
-        if config.wrap_with_layout:
+        # Wrap with layout if provided and not an HTMX request
+        if config.wrap_with_layout and not is_htmx_request(request):
             return config.wrap_with_layout(full_interface)
         return full_interface
     
