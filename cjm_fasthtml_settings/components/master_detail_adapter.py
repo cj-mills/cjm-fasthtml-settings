@@ -173,8 +173,8 @@ def create_settings_master_detail(
             
             for plugin_metadata in category_plugins:
                 if plugin_metadata.config_schema:
-                    # Use 'name' attribute from PluginMetadata
-                    plugin_id = plugin_metadata.name
+                    # Use the proper unique_id format (category_name)
+                    plugin_id = plugin_metadata.get_unique_id()
                     
                     # Check if plugin is configured
                     try:

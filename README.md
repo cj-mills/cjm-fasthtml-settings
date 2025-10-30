@@ -44,32 +44,32 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> core_config
-    components_dashboard --> core_html_ids
-    components_dashboard --> core_utils
     components_dashboard --> components_sidebar
+    components_dashboard --> core_utils
+    components_dashboard --> core_html_ids
     components_dashboard --> components_forms
-    components_forms --> core_config
+    components_dashboard --> core_config
     components_forms --> core_html_ids
     components_forms --> core_utils
+    components_forms --> core_config
     components_master_detail_adapter --> core_schemas
-    components_master_detail_adapter --> core_config
     components_master_detail_adapter --> core_utils
     components_master_detail_adapter --> components_forms
-    components_sidebar --> core_config
+    components_master_detail_adapter --> core_config
     components_sidebar --> core_html_ids
+    components_sidebar --> core_config
     components_sidebar --> core_schemas
     core_schemas --> core_schemas
-    core_schemas --> core_schema_group
     core_schemas --> core_config
+    core_schemas --> core_schema_group
     core_utils --> core_config
-    routes --> core_schemas
-    routes --> routes
-    routes --> core_utils
-    routes --> core_config
     routes --> components_dashboard
-    routes --> core_html_ids
     routes --> components_sidebar
+    routes --> routes
+    routes --> core_schemas
+    routes --> core_config
+    routes --> core_utils
+    routes --> core_html_ids
     routes --> components_forms
 ```
 
