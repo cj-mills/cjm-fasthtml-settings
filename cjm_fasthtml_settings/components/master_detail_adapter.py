@@ -108,8 +108,10 @@ def create_settings_master_detail(
             group_items = []
             configured_count = 0
             
-            for sub_schema in schema_entry.schemas.values():
-                schema_id = sub_schema.get("unique_id", sub_schema.get("name"))
+            # Iterate over items to get both key and value
+            for schema_key, sub_schema in schema_entry.schemas.items():
+                # Generate proper unique_id using the group's method
+                schema_id = schema_entry.get_unique_id(schema_key)
                 configured = is_schema_configured(schema_id, config_dir)
                 if configured:
                     configured_count += 1
