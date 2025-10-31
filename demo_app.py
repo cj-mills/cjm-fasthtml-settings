@@ -3,12 +3,10 @@
 This demo tests all library features:
 - Basic schema registration
 - SchemaGroup (collapsible sidebar sections)
-- Plugin integration with SimplePluginRegistry
+- Plugin integration with UnifiedPluginRegistry
 - Configuration persistence
 - Theme integration
 - MasterDetail pattern integration (from cjm-fasthtml-interactions)
-
-Toggle USE_MASTER_DETAIL flag to test both legacy and new MasterDetail modes.
 """
 
 from pathlib import Path
@@ -403,22 +401,14 @@ print(f"  ✓ Categories: {', '.join(plugin_registry.get_categories_with_plugins
 print("\n[5/5] Configuring routes...")
 from cjm_fasthtml_settings.routes import configure_settings, config
 
-# NEW: Toggle between legacy and MasterDetail pattern
-# Set to True to test the new MasterDetail integration
-USE_MASTER_DETAIL = True  # Change to False to test legacy mode
-
 configure_settings(
     config_dir=Path("demo_configs"),
     default_schema="general",
-    plugin_registry=plugin_registry,
-    use_master_detail_pattern=USE_MASTER_DETAIL
+    plugin_registry=plugin_registry
 )
 
-if USE_MASTER_DETAIL:
-    print("  ✓ Routes configured with MasterDetail pattern (NEW)")
-    print("  ✓ Using cjm-fasthtml-interactions MasterDetail for sidebar")
-else:
-    print("  ✓ Routes configured with legacy sidebar (CLASSIC)")
+print("  ✓ Routes configured with MasterDetail pattern")
+print("  ✓ Using cjm-fasthtml-interactions for UI patterns")
 print("  ✓ Plugin support enabled")
 
 # Step 3: Import the router (AFTER registering schemas and configuring)
@@ -486,12 +476,8 @@ def index():
                     cls=combine_classes(m.b(3))
                 ),
                 Div(
-                    Span("🆕" if config.use_master_detail_pattern else "🔄", cls=combine_classes(font_size._2xl, m.r(3))),
-                    Span(
-                        "MasterDetail Pattern " if config.use_master_detail_pattern else "Legacy Sidebar ",
-                        Strong("(Active)" if config.use_master_detail_pattern else "(Classic)"),
-                        cls=str(badge_colors.success if config.use_master_detail_pattern else badge_colors.neutral)
-                    ),
+                    Span("✓", cls=combine_classes(font_size._2xl, m.r(3))),
+                    Span("MasterDetail pattern from cjm-fasthtml-interactions"),
                     cls=combine_classes(m.b(8))
                 ),
                 cls=combine_classes(text_align.left, m.b(8))

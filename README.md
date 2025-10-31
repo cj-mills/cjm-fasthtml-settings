@@ -12,11 +12,9 @@ pip install cjm_fasthtml_settings
 ## Project Structure
 
     nbs/
-    ├── components/ (4)
-    │   ├── dashboard.ipynb              # Settings dashboard layout components
+    ├── components/ (2)
     │   ├── forms.ipynb                  # Form generation components for settings interfaces
-    │   ├── master_detail_adapter.ipynb  # Adapter for integrating cjm-fasthtml-interactions MasterDetail pattern into settings
-    │   └── sidebar.ipynb                # Navigation menu components for settings sidebar
+    │   └── master_detail_adapter.ipynb  # Adapter for integrating cjm-fasthtml-interactions MasterDetail pattern into settings
     ├── core/ (5)
     │   ├── config.ipynb        # Configuration constants, directory management, and base application schema
     │   ├── html_ids.ipynb      # Centralized HTML ID constants for settings components
@@ -26,16 +24,14 @@ pip install cjm_fasthtml_settings
     ├── plugins.ipynb  # Optional plugin integration for extensible settings systems
     └── routes.ipynb   # FastHTML route handlers for settings interface
 
-Total: 11 notebooks across 2 directories
+Total: 9 notebooks across 2 directories
 
 ## Module Dependencies
 
 ``` mermaid
 graph LR
-    components_dashboard[components.dashboard<br/>Dashboard]
     components_forms[components.forms<br/>Forms]
     components_master_detail_adapter[components.master_detail_adapter<br/>Master-Detail Adapter]
-    components_sidebar[components.sidebar<br/>Sidebar]
     core_config[core.config<br/>Config]
     core_html_ids[core.html_ids<br/>HTML IDs]
     core_schema_group[core.schema_group<br/>Schema Group]
@@ -44,34 +40,26 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> core_utils
-    components_dashboard --> core_html_ids
-    components_dashboard --> components_forms
-    components_dashboard --> components_sidebar
-    components_dashboard --> core_config
     components_forms --> core_html_ids
-    components_forms --> core_utils
     components_forms --> core_config
-    components_master_detail_adapter --> core_utils
-    components_master_detail_adapter --> components_forms
-    components_master_detail_adapter --> core_schemas
+    components_forms --> core_utils
     components_master_detail_adapter --> core_config
-    components_sidebar --> core_html_ids
-    components_sidebar --> core_schemas
-    components_sidebar --> core_config
+    components_master_detail_adapter --> components_forms
+    components_master_detail_adapter --> core_utils
+    components_master_detail_adapter --> core_schemas
+    core_schemas --> core_schemas
     core_schemas --> core_config
     core_schemas --> core_schema_group
-    core_schemas --> core_schemas
     core_utils --> core_config
-    routes --> core_html_ids
-    routes --> components_forms
     routes --> core_utils
-    routes --> core_schemas
+    routes --> core_html_ids
     routes --> core_config
+    routes --> components_forms
     routes --> routes
+    routes --> core_schemas
 ```
 
-*25 cross-module dependencies detected*
+*17 cross-module dependencies detected*
 
 ## CLI Reference
 
@@ -115,50 +103,6 @@ def get_app_config_schema(
 
 ``` python
 DEFAULT_CONFIG_DIR
-```
-
-### Dashboard (`dashboard.ipynb`)
-
-> Settings dashboard layout components
-
-#### Import
-
-``` python
-from cjm_fasthtml_settings.components.dashboard import (
-    create_form_skeleton,
-    render_schema_settings_content,
-    settings_content
-)
-```
-
-#### Functions
-
-``` python
-def create_form_skeleton(
-    schema_id: str,  # The schema ID for the settings
-    hx_get_url: str  # URL to fetch the actual form content
-) -> FT:  # Div element with loading trigger
-    "Create a loading skeleton for the settings form that loads asynchronously."
-```
-
-``` python
-def render_schema_settings_content(
-    schema: Dict,  # JSON schema for the settings
-    config_dir: Optional[Path] = None  # Config directory path
-) -> FT:  # Settings form container
-    "Render settings content for a schema-based configuration."
-```
-
-``` python
-def settings_content(
-    request,  # FastHTML request object
-    schema: Dict,  # Schema to display
-    schemas: Dict,  # All registered schemas for sidebar
-    config_dir: Optional[Path] = None,  # Config directory
-    menu_section_title: str = "Settings",  # Sidebar section title
-    plugin_registry: Optional[Any] = None  # Optional plugin registry
-) -> FT:  # Settings content layout
-    "Return settings content with sidebar and form."
 ```
 
 ### Forms (`forms.ipynb`)
@@ -535,44 +479,6 @@ class SettingsRegistry:
             id: str  # Schema ID (can be 'name' or 'group_schema' format)
         ) -> tuple:  # (schema_dict, error_message)
         "Resolve a schema ID to a schema dictionary."
-```
-
-### Sidebar (`sidebar.ipynb`)
-
-> Navigation menu components for settings sidebar
-
-#### Import
-
-``` python
-from cjm_fasthtml_settings.components.sidebar import (
-    create_sidebar_menu,
-    create_oob_sidebar_menu
-)
-```
-
-#### Functions
-
-``` python
-def create_sidebar_menu(
-    schemas: Dict[str, Any],  # Dictionary of schemas/groups to display in sidebar
-    active_schema: Optional[str] = None,  # The currently active schema name
-    config_dir: Optional[Path] = None,  # Directory where config files are stored
-    include_wrapper: bool = True,  # Whether to include the outer wrapper div
-    menu_section_title: str = "Settings",  # Title for the settings section
-    plugin_registry: Optional[Any] = None  # Optional plugin registry
-) -> FT:  # Div or Ul element containing the sidebar menu
-    "Create the sidebar navigation menu with support for schema groups and plugins."
-```
-
-``` python
-def create_oob_sidebar_menu(
-    schemas: Dict[str, Dict[str, Any]],  # Dictionary of schemas
-    active_schema: str,  # Active schema name
-    config_dir: Optional[Path] = None,  # Config directory
-    menu_section_title: str = "Settings",  # Menu section title
-    plugin_registry: Optional[Any] = None  # Optional plugin registry
-) -> FT:  # Sidebar menu with OOB swap attribute
-    "Create sidebar menu with OOB swap attribute for HTMX."
 ```
 
 ### Utils (`utils.ipynb`)
