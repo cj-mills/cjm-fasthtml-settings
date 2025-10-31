@@ -44,36 +44,34 @@ graph LR
     plugins[plugins<br/>Plugins]
     routes[routes<br/>Routes]
 
-    components_dashboard --> components_sidebar
     components_dashboard --> core_utils
     components_dashboard --> core_html_ids
     components_dashboard --> components_forms
+    components_dashboard --> components_sidebar
     components_dashboard --> core_config
     components_forms --> core_html_ids
     components_forms --> core_utils
     components_forms --> core_config
-    components_master_detail_adapter --> core_schemas
     components_master_detail_adapter --> core_utils
     components_master_detail_adapter --> components_forms
+    components_master_detail_adapter --> core_schemas
     components_master_detail_adapter --> core_config
     components_sidebar --> core_html_ids
-    components_sidebar --> core_config
     components_sidebar --> core_schemas
-    core_schemas --> core_schemas
+    components_sidebar --> core_config
     core_schemas --> core_config
     core_schemas --> core_schema_group
+    core_schemas --> core_schemas
     core_utils --> core_config
-    routes --> components_dashboard
-    routes --> components_sidebar
-    routes --> routes
-    routes --> core_schemas
-    routes --> core_config
-    routes --> core_utils
     routes --> core_html_ids
     routes --> components_forms
+    routes --> core_utils
+    routes --> core_schemas
+    routes --> core_config
+    routes --> routes
 ```
 
-*27 cross-module dependencies detected*
+*25 cross-module dependencies detected*
 
 ## CLI Reference
 
@@ -357,12 +355,10 @@ from cjm_fasthtml_settings.routes import (
     RoutesConfig,
     configure_settings,
     index,
-    load_form,
     save,
     reset,
     plugin_reset,
-    plugin_save,
-    plugin
+    plugin_save
 )
 ```
 
@@ -374,8 +370,7 @@ def configure_settings(
     wrap_with_layout: Callable = None,  # Function to wrap full page content with app layout
     plugin_registry = None,  # Optional plugin registry (must implement PluginRegistryProtocol)
     default_schema: str = "general",  # Default schema to display
-    menu_section_title: str = "Settings",  # Title for the settings menu section
-    use_master_detail_pattern: bool = False  # Use MasterDetail pattern from cjm-fasthtml-interactions
+    menu_section_title: str = "Settings"  # Title for the settings menu section
 ) -> RoutesConfig:  # Configured RoutesConfig instance
     "Configure the settings system with a single function call."
 ```
@@ -388,42 +383,12 @@ def _resolve_schema(
 ```
 
 ``` python
-def _handle_htmx_request(
-    request,  # FastHTML request object
-    content_fn: Callable,  # Function to generate content
-    *args,  # Positional arguments for content_fn
-    **kwargs  # Keyword arguments for content_fn
-) -> FT:  # Response content
-    "Handle HTMX vs full page response pattern."
-```
-
-``` python
-def _create_settings_response(
-    schema: Dict[str, Any],  # Schema dictionary
-    values: Dict[str, Any],  # Form values
-    save_url: str,  # URL for saving
-    reset_url: str,  # URL for resetting
-    alert_msg,  # Alert message element
-    sidebar_id: str  # Active sidebar ID
-) -> FT:  # Settings form with sidebar
-    "Create standardized settings form response with sidebar."
-```
-
-``` python
 @settings_ar
 def index(
     request,  # FastHTML request object
     id: str = None  # Schema ID to display (defaults to config.default_schema)
 ) -> FT:  # Settings page content
     "Main settings page."
-```
-
-``` python
-@settings_ar
-def load_form(
-    id: str = None  # Schema ID to load (defaults to config.default_schema)
-) -> FT:  # Settings form content
-    "Async endpoint that loads the settings form."
 ```
 
 ``` python
@@ -458,15 +423,6 @@ async def plugin_save(
     id: str  # Plugin unique ID
 ) -> FT:  # Response with form or error
     "Save plugin configuration handler."
-```
-
-``` python
-@settings_ar
-def plugin(
-    request,  # FastHTML request object
-    id: str  # Plugin unique ID
-) -> FT:  # Plugin settings page content
-    "Plugin settings page."
 ```
 
 #### Classes
